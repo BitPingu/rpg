@@ -31,6 +31,10 @@ public class PlayerIdleState : PlayerState
 
         // Debug.Log(player.name + " idling...");
 
+        // TODO: allow interaction with world ie. chests, items, dialogue
+        // TODO: cannot do this in battle state
+
+
         // enter battle
         if (player.Input.LeftClick)
             player.StateMachine.ChangeState(player.BattleState);

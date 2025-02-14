@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
@@ -11,6 +12,8 @@ public class PlayerController : MonoBehaviour
     public bool LeftClickHold { get; set; }
     public bool RightClick { get; set; }
     public bool RightClickHold { get; set; }
+
+    public bool Space { get; set; }
 
     private CinemachineOrbitalFollow _orbit;
     private CinemachineRotationComposer _composer;
@@ -43,6 +46,9 @@ public class PlayerController : MonoBehaviour
         LeftClickHold = Input.GetMouseButton(0);
         RightClick = Input.GetMouseButtonDown(1);
         RightClickHold = Input.GetMouseButton(1);
+
+        // Get key inputs (abilities)
+        Space = Input.GetKeyDown(KeyCode.Space);
     }
 
     IEnumerator ResetCam()

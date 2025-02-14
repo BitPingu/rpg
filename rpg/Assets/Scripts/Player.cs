@@ -11,6 +11,8 @@ public class Player : MonoBehaviour
     [field: SerializeField] public GameObject Weapon { get; set; }
     [field: SerializeField] public GameObject WeaponBack { get; set; }
 
+    [field: SerializeField] public IAbility Ability1 { get; set; }
+
     public PlayerController Input { get; set; }
     public float TurnSmoothTime { get; set; } = 0.1f;
     private float _turnSmoothVelocity;
@@ -53,9 +55,11 @@ public class Player : MonoBehaviour
         StateMachine.CurrentPlayerState.FrameUpdate();
         // allow player movement all states
         MovePlayer();
+        // change anim speed
+        Anim.SetFloat("Speed", MoveSpeed/6);
     }
 
-    public void MovePlayer()
+    private void MovePlayer()
     {
         // Get direction from input
         Vector3 direction = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput).normalized;
@@ -79,8 +83,8 @@ public class Player : MonoBehaviour
             Controller.Move(MoveDir.normalized * MoveSpeed * Time.deltaTime);
         }
 
-        // Animate
-        Anim.SetFloat("Speed", direction.magnitude);
+        // Animate movement
+        Anim.SetFloat("Movement", direction.magnitude);
     }
 
     public void Damage(float damageAmount)

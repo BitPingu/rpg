@@ -1,4 +1,3 @@
-using UnityEngine;
 
 public interface IState
 {
@@ -17,3 +16,4 @@ public interface IState
         // code that runs when we exit the state
     }
 }
+
