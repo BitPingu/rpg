@@ -99,7 +99,7 @@ public class PlayerBattleState : PlayerState
 
         if (_clickTime >= 1.7f && _clickTime < 2.1f) {
             // spin boost
-            _controller.Move(player.MoveDir.normalized * 5f * Time.deltaTime);
+            _controller.Move(player.Movement * 5f * Time.deltaTime);
         }
 
         // Animate attack

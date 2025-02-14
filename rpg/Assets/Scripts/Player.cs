@@ -14,9 +14,12 @@ public class Player : MonoBehaviour
     [field: SerializeField] public IAbility Ability1 { get; set; }
 
     public PlayerController Input { get; set; }
+    private Vector3 _currentInputVector;
+    public float SmoothInputSpeed { get; set; } = 0.1f;
+    private Vector3 _smoothInputVelocity;
     public float TurnSmoothTime { get; set; } = 0.1f;
     private float _turnSmoothVelocity;
-    public Vector3 MoveDir { get; set; }
+    public Vector3 Movement { get; set; }
 
     public CharacterController Controller { get; set; }
     public Animator Anim { get; set; }
@@ -55,21 +58,30 @@ public class Player : MonoBehaviour
         StateMachine.CurrentPlayerState.FrameUpdate();
         // allow player movement all states
         MovePlayer();
-        // change anim speed
-        Anim.SetFloat("Speed", MoveSpeed/6);
     }
 
     private void MovePlayer()
     {
         // Get direction from input
-        Vector3 direction = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput).normalized;
+        Vector3 inputVector = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput);
 
-        // Check if moving in any direction
-        if (direction.magnitude >= 0.1f)
+        // Smooth movement
+        _currentInputVector = Vector3.SmoothDamp(_currentInputVector, inputVector, ref _smoothInputVelocity, SmoothInputSpeed);
+
+        // Set movement
+        Movement = new Vector3(_currentInputVector.x, 0f, _currentInputVector.z);
+
+        // Include camera direction
+        Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
+        Movement = Movement.x * cam.right + Movement.z * cam.forward;
+
+        // Move player
+        Controller.Move(Movement * Time.deltaTime * MoveSpeed);
+
+        if (inputVector.magnitude >= 0.1f)
         {
             // Calculate angle
-            Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
             // Smooth rotation
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
@@ -77,14 +89,13 @@ public class Player : MonoBehaviour
             // Set rotation
             if (!Input.LeftClick || (Input.LeftClick && !Input.RightClick))
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
-
-            // Move to direction
-            MoveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            Controller.Move(MoveDir.normalized * MoveSpeed * Time.deltaTime);
         }
 
         // Animate movement
-        Anim.SetFloat("Movement", direction.magnitude);
+        Anim.SetFloat("Movement", Movement.magnitude);
+
+        // Change anim speed
+        Anim.SetFloat("Speed", Movement.magnitude);
     }
 
     public void Damage(float damageAmount)
