@@ -1,6 +1,6 @@
 using Unity.Cinemachine;
-using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerBattleState : PlayerState
 {
@@ -20,6 +20,8 @@ public class PlayerBattleState : PlayerState
     }
     private AbilityState _abilityState = AbilityState.ready;
 
+    private Slider _slider;
+
 
     // pass in any parameters you need in the constructors
     public PlayerBattleState(Player player, PlayerStateMachine playerStateMachine) : base(player, playerStateMachine)
@@ -29,6 +31,11 @@ public class PlayerBattleState : PlayerState
         _cam = player.GetComponentInChildren<CinemachineCamera>();
         
         _ability = player.Ability1;
+        _slider = player.Slid;
+        _slider.maxValue = _ability.cooldownTime;
+        _slider.value = _slider.minValue;
+
+        _slider.gameObject.SetActive(false);
     }
 
     // code that runs when we first enter the state
@@ -47,6 +54,9 @@ public class PlayerBattleState : PlayerState
 
         // slow player
         player.MoveSpeed = player.MaxSpeed*.8f;
+
+        // show ui
+        _slider.gameObject.SetActive(true);
     }
 
     // code that runs when we exit the state
@@ -58,6 +68,9 @@ public class PlayerBattleState : PlayerState
 
         // restore speed
         player.MoveSpeed = player.MaxSpeed;
+
+        // hide ui
+        _slider.gameObject.SetActive(false);
     }
 
     public override void FrameUpdate()
@@ -88,7 +101,7 @@ public class PlayerBattleState : PlayerState
     private void ComboAttack()
     {
         if (player.Input.LeftClickHold)
-            _clickTime += Time.deltaTime;
+            _clickTime += Time.deltaTime * player.AttackSpeed;
         else
             _clickTime = 0f;
 
@@ -99,11 +112,14 @@ public class PlayerBattleState : PlayerState
 
         if (_clickTime >= 1.7f && _clickTime < 2.1f) {
             // spin boost
-            _controller.Move(player.Movement * 5f * Time.deltaTime);
+            _controller.Move(player.Movement * Time.deltaTime);
         }
 
         // Animate attack
         player.Anim.SetFloat("Attack", _clickTime);
+
+        // Animate attack speed
+        player.Anim.SetFloat("Attack Speed", player.AttackSpeed);
     }
 
     private void Ability()
@@ -116,6 +132,8 @@ public class PlayerBattleState : PlayerState
                     _ability.Activate(player.gameObject);
                     _abilityState = AbilityState.active;
                     _abilityActiveTime = _ability.activeTime;
+                    // update ui
+                    _slider.value = _slider.maxValue;
                 }
             break;
             case AbilityState.active:
@@ -134,6 +152,8 @@ public class PlayerBattleState : PlayerState
                 if (_abilityCooldownTime > 0)
                 {
                     _abilityCooldownTime -= Time.deltaTime;
+                    // update ui
+                    _slider.value = _abilityCooldownTime;
                 }
                 else
                 {

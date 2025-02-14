@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Dash
   m_EditorClassIdentifier: 
   name: Dash
-  cooldownTime: 2
-  activeTime: 0.5
-  dashVelocity: 10
+  cooldownTime: 5
+  activeTime: 2
+  movementSpeedMultiplier: 2
+  attackSpeedMultiplier: 2

@@ -1,12 +1,19 @@
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 public class Player : MonoBehaviour
 {
+    [field: SerializeField] public Slider Slid { get; set; }
+    [field: SerializeField] public Volume Vol { get; set; }
+
     [field: SerializeField] public float MaxHealth { get; set; } = 100f;
     public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
+    [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
+    public float AttackSpeed { get; set; }
 
     [field: SerializeField] public GameObject Weapon { get; set; }
     [field: SerializeField] public GameObject WeaponBack { get; set; }
@@ -40,9 +47,10 @@ public class Player : MonoBehaviour
 
     private void Start()
     {
-        // set health and speed
+        // set player parameters
         CurrentHealth = MaxHealth;
         MoveSpeed = MaxSpeed;
+        AttackSpeed = MaxAttackSpeed;
 
         // get player components
         Input = GetComponent<PlayerController>();
@@ -75,8 +83,11 @@ public class Player : MonoBehaviour
         Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
         Movement = Movement.x * cam.right + Movement.z * cam.forward;
 
+        // Speed multiplier
+        Movement *= MoveSpeed;
+
         // Move player
-        Controller.Move(Movement * Time.deltaTime * MoveSpeed);
+        Controller.Move(Movement * Time.deltaTime);
 
         if (inputVector.magnitude >= 0.1f)
         {
@@ -92,10 +103,7 @@ public class Player : MonoBehaviour
         }
 
         // Animate movement
-        Anim.SetFloat("Movement", Movement.magnitude);
-
-        // Change anim speed
-        Anim.SetFloat("Speed", Movement.magnitude);
+        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
     public void Damage(float damageAmount)
