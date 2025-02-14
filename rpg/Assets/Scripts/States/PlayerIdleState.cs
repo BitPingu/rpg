@@ -31,8 +31,8 @@ public class PlayerIdleState : PlayerState
 
         // Debug.Log(player.name + " idling...");
 
-        // Check if attacking
-        if (player.IsAttacking)
+        // enter battle
+        if (player.Input.LeftClick)
             player.StateMachine.ChangeState(player.BattleState);
     }
 

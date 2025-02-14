@@ -16,8 +16,6 @@ public class Player : MonoBehaviour
     private float _turnSmoothVelocity;
     public Vector3 MoveDir { get; set; }
 
-    public bool IsAttacking { get; set; }
-
     public CharacterController Controller { get; set; }
     public Animator Anim { get; set; }
 
@@ -53,10 +51,8 @@ public class Player : MonoBehaviour
     private void Update()
     {
         StateMachine.CurrentPlayerState.FrameUpdate();
-        // allow player movement
+        // allow player movement all states
         MovePlayer();
-        // check if attacking
-        IsAttacking = Input.LeftClick;
     }
 
     public void MovePlayer()

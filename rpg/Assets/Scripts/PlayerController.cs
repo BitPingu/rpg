@@ -8,7 +8,9 @@ public class PlayerController : MonoBehaviour
     public float VerticalInput { get; set; }
 
     public bool LeftClick { get; set; }
+    public bool LeftClickHold { get; set; }
     public bool RightClick { get; set; }
+    public bool RightClickHold { get; set; }
 
     private CinemachineOrbitalFollow _orbit;
     private CinemachineRotationComposer _composer;
@@ -37,8 +39,10 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(ResetCam());
 
         // Get mouse input
-        LeftClick = Input.GetMouseButton(0);
-        RightClick = Input.GetMouseButton(1);
+        LeftClick = Input.GetMouseButtonDown(0);
+        LeftClickHold = Input.GetMouseButton(0);
+        RightClick = Input.GetMouseButtonDown(1);
+        RightClickHold = Input.GetMouseButton(1);
     }
 
     IEnumerator ResetCam()

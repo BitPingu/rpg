@@ -54,13 +54,16 @@ public class PlayerBattleState : PlayerState
         // TODO: add special attacks, abilities, dodge roll, sprinting, jumping
         // TODO: right click should be for charge attack or secondary
 
-        if (player.Input.RightClick)
+        if (player.Input.RightClickHold)
         {
             // lock rotation
             player.transform.rotation = Quaternion.Euler(0f, _cam.transform.eulerAngles.y, 0f);
         }
 
-        _clickTime += Time.deltaTime;
+        if (player.Input.LeftClickHold)
+            _clickTime += Time.deltaTime;
+        else
+            _clickTime = 0f;
 
         if (_clickTime > 2.1f)
         {
@@ -75,8 +78,8 @@ public class PlayerBattleState : PlayerState
         // Animate
         player.Anim.SetFloat("Attack", _clickTime);
 
-        // Check if stopped attacking
-        if (!player.IsAttacking)
+        // exit battle
+        if (!player.Input.LeftClickHold && player.Input.RightClick)
             player.StateMachine.ChangeState(player.IdleState);
     }
 
