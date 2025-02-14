@@ -13,7 +13,7 @@ public class PlayerController : MonoBehaviour
     public bool RightClick { get; set; }
     public bool RightClickHold { get; set; }
 
-    public bool Space { get; set; }
+    public bool One { get; set; }
 
     private CinemachineOrbitalFollow _orbit;
     private CinemachineRotationComposer _composer;
@@ -48,7 +48,7 @@ public class PlayerController : MonoBehaviour
         RightClickHold = Input.GetMouseButton(1);
 
         // Get key inputs (abilities)
-        Space = Input.GetKeyDown(KeyCode.Space);
+        One = Input.GetKeyDown(KeyCode.Alpha1);
     }
 
     IEnumerator ResetCam()

@@ -127,7 +127,7 @@ public class PlayerBattleState : PlayerState
         switch (_abilityState)
         {
             case AbilityState.ready:
-                if (player.Input.Space)
+                if (player.Input.One)
                 {
                     _ability.Activate(player.gameObject);
                     _abilityState = AbilityState.active;

@@ -1,3 +1,4 @@
+using System;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -71,27 +72,15 @@ public class Player : MonoBehaviour
     private void MovePlayer()
     {
         // Get direction from input
-        Vector3 inputVector = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput);
+        Vector3 inputVector = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput).normalized;
 
-        // Smooth movement
-        _currentInputVector = Vector3.SmoothDamp(_currentInputVector, inputVector, ref _smoothInputVelocity, SmoothInputSpeed);
+        Vector3 MoveDir = Vector3.zero;
 
-        // Set movement
-        Movement = new Vector3(_currentInputVector.x, 0f, _currentInputVector.z);
-
-        // Include camera direction
-        Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
-        Movement = Movement.x * cam.right + Movement.z * cam.forward;
-
-        // Speed multiplier
-        Movement *= MoveSpeed;
-
-        // Move player
-        Controller.Move(Movement * Time.deltaTime);
-
+        // Check if moving in any direction
         if (inputVector.magnitude >= 0.1f)
         {
-            // Calculate angle
+            // Calculate angle with cam
+            Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
             float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
             // Smooth rotation
@@ -100,7 +89,22 @@ public class Player : MonoBehaviour
             // Set rotation
             if (!Input.LeftClick || (Input.LeftClick && !Input.RightClick))
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
+
+            // Move to direction
+            MoveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
         }
+
+        // Smooth movement
+        _currentInputVector = Vector3.SmoothDamp(_currentInputVector, MoveDir, ref _smoothInputVelocity, SmoothInputSpeed);
+
+        // Set movement
+        Movement = new Vector3(_currentInputVector.x, 0f, _currentInputVector.z);
+
+        // Speed multiplier
+        Movement *= MoveSpeed;
+
+        // Move player
+        Controller.Move(Movement * Time.deltaTime);
 
         // Animate movement
         Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
