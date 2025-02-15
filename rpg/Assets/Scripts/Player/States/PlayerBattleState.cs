@@ -11,14 +11,14 @@ public class PlayerBattleState : PlayerState
 
     private IAbility _ability;
     private float _abilityCooldownTime;
-    float _abilityActiveTime;
+    private float _abilityActiveTime;
     enum AbilityState
     {
         ready,
         active,
         cooldown
     }
-    private AbilityState _abilityState = AbilityState.ready;
+    private AbilityState _abilityState;
 
     private Slider _slider;
 
@@ -31,6 +31,8 @@ public class PlayerBattleState : PlayerState
         _cam = player.GetComponentInChildren<CinemachineCamera>();
         
         _ability = player.Ability1;
+        _abilityState = AbilityState.ready;
+
         _slider = player.Slid;
         _slider.maxValue = _ability.cooldownTime;
         _slider.value = _slider.minValue;
@@ -82,9 +84,10 @@ public class PlayerBattleState : PlayerState
         // TODO: add special attacks, abilities, dodge roll, sprinting, jumping
         // TODO: right click should be for charge attack or secondary
         // TODO: overdrive mechanic?
+        // TODO: knockback/recoil? (stronger on spin attack)
 
         // lock rotation for aim
-        if (player.Input.RightClickHold)
+        if (player.Input.LeftClickHold && player.Input.RightClickHold)
             player.transform.rotation = Quaternion.Euler(0f, _cam.transform.eulerAngles.y, 0f);
 
         // allow main combo attack
@@ -124,6 +127,7 @@ public class PlayerBattleState : PlayerState
 
     private void Ability()
     {
+        // TODO: make this function inheritable for player and enemies?
         switch (_abilityState)
         {
             case AbilityState.ready:

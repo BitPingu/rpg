@@ -1,6 +1,5 @@
-using System;
-using Unity.Cinemachine;
 using UnityEngine;
+using Unity.Cinemachine;
 using UnityEngine.Rendering;
 using UnityEngine.UI;
 
@@ -71,6 +70,7 @@ public class Player : MonoBehaviour
 
     private void MovePlayer()
     {
+        // TODO: make this function inheritable for player and enemies?
         // Get direction from input
         Vector3 inputVector = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput).normalized;
 
