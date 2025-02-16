@@ -15,8 +15,12 @@ public class Player : MonoBehaviour
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
     public float AttackSpeed { get; set; }
 
+    [field: SerializeField] public float SightRadius { get; set; } = 7.0f;
+    [field: SerializeField] public bool TargetingEnemy { get; set; }
+
     [field: SerializeField] public GameObject Weapon { get; set; }
     [field: SerializeField] public GameObject WeaponBack { get; set; }
+    [field: SerializeField] public GameObject WeaponBlock { get; set; }
 
     [field: SerializeField] public IAbility Ability1 { get; set; }
 
@@ -30,6 +34,8 @@ public class Player : MonoBehaviour
 
     public CharacterController Controller { get; set; }
     public Animator Anim { get; set; }
+
+    public Collider[] Opponents { get; set; }
 
     // state machine vars
     public PlayerStateMachine StateMachine { get; set; }
@@ -84,12 +90,15 @@ public class Player : MonoBehaviour
             Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
             float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
-            // Smooth rotation
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
+            // Rotate if not targeting enemy
+            if (!TargetingEnemy)
+            {
+                // Smooth rotation
+                float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
 
-            // Set rotation
-            if (!Input.LeftClick || (Input.LeftClick && !Input.RightClick))
+                // Set rotation
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
+            }
 
             // Move to direction
             MoveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
@@ -109,6 +118,21 @@ public class Player : MonoBehaviour
 
         // Animate movement
         Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
+    }
+
+    public void FaceOpponent(Enemy opponent)
+    {
+        // Get direction towards opponent
+        Vector3 direction = opponent.transform.position - transform.position;
+
+		// Calculate angle
+		float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+
+		// Smooth rotation
+		float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
+
+		// Set rotation
+		transform.rotation = Quaternion.Euler(0f, angle, 0f);
     }
 
     public void Damage(float damageAmount)
@@ -142,6 +166,22 @@ public class Player : MonoBehaviour
 
         // game over screen/respawn
     }
+
+    public bool SeeOpponents()
+    {
+        // TODO: include FOV?
+        // Detect opponents
+        Opponents = Physics.OverlapSphere(transform.position, SightRadius, LayerMask.GetMask("Enemy"));
+        return Opponents.Length > 0;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawWireSphere(transform.position, SightRadius);
+    }
+
+
+
 
 }
 

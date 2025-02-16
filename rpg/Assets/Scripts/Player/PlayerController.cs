@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public bool RightClick { get; set; }
     public bool RightClickHold { get; set; }
 
+    public bool Q { get; set; }
     public bool E { get; set; }
     public bool One { get; set; }
 
@@ -37,7 +38,7 @@ public class PlayerController : MonoBehaviour
         VerticalInput = Input.GetAxisRaw("Vertical");
 
         // Reset cam
-        if (Input.GetKeyDown(KeyCode.Q) && !_recenterCooldown && 
+        if (Input.GetKeyDown(KeyCode.X) && !_recenterCooldown && 
             (!Input.GetMouseButton(0) || (Input.GetMouseButton(0) && !Input.GetMouseButton(1))) &&
                 !_orbit.HorizontalAxis.Recentering.Enabled && !_orbit.VerticalAxis.Recentering.Enabled)
             StartCoroutine(ResetCam());
@@ -49,6 +50,7 @@ public class PlayerController : MonoBehaviour
         RightClickHold = Input.GetMouseButton(1);
 
         // Get key inputs
+        Q = Input.GetKeyDown(KeyCode.Q);
         E = Input.GetKeyDown(KeyCode.E);
 
         // Get key inputs (abilities)

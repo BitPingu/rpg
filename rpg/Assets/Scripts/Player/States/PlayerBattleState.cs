@@ -5,8 +5,10 @@ using UnityEngine.UI;
 public class PlayerBattleState : PlayerState
 {
     private CharacterController _controller;
-    private CinemachineCamera _cam;
+    private Enemy _currentOpponent;
 
+    private bool _stance;
+    private bool _attacking;
     private float _clickTime;
 
     private IAbility _ability;
@@ -28,7 +30,6 @@ public class PlayerBattleState : PlayerState
     {
         // this.player = player;
         _controller = player.GetComponent<CharacterController>();
-        _cam = player.GetComponentInChildren<CinemachineCamera>();
         
         _ability = player.Ability1;
         _abilityState = AbilityState.ready;
@@ -51,7 +52,9 @@ public class PlayerBattleState : PlayerState
         player.WeaponBack.SetActive(false);
         
         player.Anim.SetLayerWeight(1, 1);
-    
+
+        _stance = false;
+        _attacking = false;
         _clickTime = 0f;
 
         // slow player
@@ -67,6 +70,12 @@ public class PlayerBattleState : PlayerState
         base.ExitState();
 
         player.Anim.SetLayerWeight(1, 0);
+
+        if (player.TargetingEnemy)
+            player.TargetingEnemy = false;
+
+        if (player.WeaponBlock.activeSelf)
+            player.WeaponBlock.SetActive(false);
 
         // restore speed
         player.MoveSpeed = player.MaxSpeed;
@@ -85,32 +94,108 @@ public class PlayerBattleState : PlayerState
         // TODO: right click should be for charge attack or secondary
         // TODO: overdrive mechanic?
         // TODO: knockback/recoil? (stronger on spin attack)
+        // TODO: for blocking, chance to parry? perfect block on right timing? or chance?
+        // TODO: make parrying an unlockable ability?
 
         // TODO: for main combo: 1-3 hits for level 1, continue holding left click to charge spin attack (hit 4) unlock on higher level
         // TODO: animation canceling mechanic (hold left click to perform 3 hits, then lift and click again)
         // TODO: right click hold should be for blocking enemy attack - deal less damage/increase defense, and knockback
 
-        // lock rotation for aim
-        if (player.Input.LeftClickHold && player.Input.RightClickHold)
-            player.transform.rotation = Quaternion.Euler(0f, _cam.transform.eulerAngles.y, 0f);
+        // allow targeting
+        if (player.Input.E)
+            TargetEnemy();
+
+        // always face targeted opponent
+        if (player.TargetingEnemy && OpponentInRange() && player.CurrentHealth > 0)
+        {
+            player.FaceOpponent(_currentOpponent);
+        }
+        else if (player.TargetingEnemy && !OpponentInRange() && player.CurrentHealth > 0)
+        {
+            // out of range
+            Debug.Log("Enemy out of range.");
+            player.TargetingEnemy = false;
+        }
+
+        // allow sword stance
+        if (!_attacking)
+            Stance();
 
         // allow main combo attack
-        ComboAttack();
+        if (!_stance)
+            ComboAttack();
 
         // allow abilities/arts
-        Ability();
+        if (!_stance)
+            Ability();
 
         // exit battle
-        if (player.Input.E && _abilityState != AbilityState.active)
+        if (player.Input.Q && _abilityState != AbilityState.active)
             player.StateMachine.ChangeState(player.IdleState);
+    }
+
+    private void TargetEnemy()
+    {
+        if (player.TargetingEnemy)
+        {
+            // exit targeting mode
+            Debug.Log("Exiting targeting mode.");
+            player.TargetingEnemy = false;
+            return;
+        }
+
+        // Detect opponents
+        // TODO: add target ui on enemy
+        if (player.SeeOpponents())
+        {
+            // get opponent
+            // Find shortest distance one
+            _currentOpponent = player.Opponents[0].GetComponent<Enemy>();
+
+            // set opponent as target
+            player.TargetingEnemy = true;
+            Debug.Log("Targeting " + _currentOpponent.name + ".");
+        }
+        else
+        {
+            Debug.Log("No enemies nearby.");
+        }
+    }
+
+    private bool OpponentInRange()
+    {
+        return Vector3.Distance(_currentOpponent.transform.position, player.transform.position) <= player.SightRadius;
+    }
+
+    private void Stance()
+    {
+        // lock rotation for aim
+        if (player.Input.RightClickHold)
+        {
+            player.Weapon.SetActive(false);
+            player.WeaponBlock.SetActive(true);
+            _stance = true;
+        }
+        else
+        {
+            player.Weapon.SetActive(true);
+            player.WeaponBlock.SetActive(false);
+            _stance = false;
+        }
     }
 
     private void ComboAttack()
     {
         if (player.Input.LeftClickHold)
+        {
             _clickTime += Time.deltaTime * player.AttackSpeed;
+            _attacking = true;
+        }
         else
+        {
             _clickTime = 0f;
+            _attacking = false;
+        }
 
         if (_clickTime > 2.1f)
         {

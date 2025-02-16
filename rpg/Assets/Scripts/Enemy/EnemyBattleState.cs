@@ -72,7 +72,7 @@ public class EnemyBattleState : EnemyState
         switch (_battleState)
         {
             case BattleState.main:
-                if (!AttackOpponent())
+                if (!OpponentInRange())
                 {
                     // chase opponent
                     Chase();
@@ -80,7 +80,7 @@ public class EnemyBattleState : EnemyState
                 else
                 {
                     // always face opponent
-                    FaceOpponent();
+                    enemy.FaceOpponent(_currentOpponent);
 
                     // main combo attack
                     ComboAttack();
@@ -92,7 +92,7 @@ public class EnemyBattleState : EnemyState
         }
     }
 
-    private bool AttackOpponent()
+    private bool OpponentInRange()
     {
         return Vector3.Distance(_currentOpponent.transform.position, enemy.transform.position) <= enemy.AttackRadius;
     }
@@ -100,11 +100,6 @@ public class EnemyBattleState : EnemyState
     private void Chase()
     {
         enemy.MoveEnemy(_currentOpponent.transform.position - enemy.transform.position);
-    }
-
-    private void FaceOpponent()
-    {
-        enemy.FaceOpponent(_currentOpponent);
     }
 
     private void ComboAttack()
