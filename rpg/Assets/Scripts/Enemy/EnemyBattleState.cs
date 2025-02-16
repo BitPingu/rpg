@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System;
 
 public class EnemyBattleState : EnemyState
 {
+    private Player _currentOpponent;
     private float _attackTime;
 
     enum BattleState
@@ -24,7 +26,9 @@ public class EnemyBattleState : EnemyState
     {
         base.EnterState();
 
-        Debug.Log(enemy.name + " is attacking.");
+        _currentOpponent = enemy.Opponents[0].GetComponent<Player>();
+
+        Debug.Log(enemy.name + " is attacking " + _currentOpponent.name + ".");
 
         // enemy.Weapon.SetActive(true);
 
@@ -59,7 +63,7 @@ public class EnemyBattleState : EnemyState
         Attack();
 
         // exit battle
-        if (!enemy.CheckPlayerWithinRange(enemy.SightRadius))
+        if (!enemy.SeeOpponents() || _currentOpponent.CurrentHealth == 0)
             enemy.StateMachine.ChangeState(enemy.IdleState);
     }
 
@@ -68,13 +72,16 @@ public class EnemyBattleState : EnemyState
         switch (_battleState)
         {
             case BattleState.main:
-                if (!enemy.CheckPlayerWithinRange(enemy.AttackRadius))
+                if (!AttackOpponent())
                 {
-                    // chase player
+                    // chase opponent
                     Chase();
                 }
                 else
                 {
+                    // always face opponent
+                    FaceOpponent();
+
                     // main combo attack
                     ComboAttack();
                 }
@@ -85,16 +92,26 @@ public class EnemyBattleState : EnemyState
         }
     }
 
+    private bool AttackOpponent()
+    {
+        return Vector3.Distance(_currentOpponent.transform.position, enemy.transform.position) <= enemy.AttackRadius;
+    }
+
     private void Chase()
     {
-        enemy.MoveEnemy(enemy.Player.transform.position - enemy.transform.position);
+        enemy.MoveEnemy(_currentOpponent.transform.position - enemy.transform.position);
+    }
+
+    private void FaceOpponent()
+    {
+        enemy.FaceOpponent(_currentOpponent);
     }
 
     private void ComboAttack()
     {
         if (Time.time > _attackTime + enemy.AttackDelay)
         {
-            enemy.Attack();
+            enemy.Attack(_currentOpponent);
             _attackTime = Time.time;
         }
     }

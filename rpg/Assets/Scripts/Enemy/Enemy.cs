@@ -3,10 +3,11 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
-    [field: SerializeField] public float MaxHealth { get; set; } = 100f;
+    [field: SerializeField] public float MaxHealth { get; set; } = 20.0f;
     public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
+    [field: SerializeField] public float AttackValue { get; set; } = 10.0f;
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
     public float AttackSpeed { get; set; }
 
@@ -33,7 +34,7 @@ public class Enemy : MonoBehaviour
     public CharacterController Controller { get; set; }
     public Animator Anim { get; set; }
 
-    public GameObject Player { get; set; }
+    public Collider[] Opponents { get; set; }
 
     // state machine vars
     public EnemyStateMachine StateMachine { get; set; }
@@ -59,9 +60,6 @@ public class Enemy : MonoBehaviour
         // get enemy components
         Controller = GetComponent<CharacterController>();
         Anim = GetComponent<Animator>();
-
-        // get player
-        Player = GameObject.FindWithTag("Player");
 
         // start in idle state
         StateMachine.Initialize(IdleState);
@@ -110,43 +108,87 @@ public class Enemy : MonoBehaviour
         Controller.Move(Movement * Time.deltaTime);
     }
 
+    public void FaceOpponent(Player opponent)
+    {
+        // Get direction towards opponent
+        Vector3 direction = opponent.transform.position - transform.position;
+
+		// Calculate angle
+		float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg;
+
+		// Smooth rotation
+		float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
+
+		// Set rotation
+		transform.rotation = Quaternion.Euler(0f, angle, 0f);
+    }
+
     public void Damage(float damageAmount)
     {
         CurrentHealth -= damageAmount;
 
         if (CurrentHealth <= 0f)
         {
-            Debug.Log(name + " dies.");
+            CurrentHealth = 0f;
+            Die();
         }
-    }
-
-    public bool CheckPlayerWithinRange(float range)
-    {
-        // TODO: include FOV?
-        // Get distance from player
-        return Vector3.Distance(Player.transform.position, transform.position) <= range;
     }
 
     private void Die()
     {
-
+        Debug.Log(name + " dies.");
+        StartCoroutine(TimedDeactivation());
     }
 
-    public void Attack()
+    IEnumerator TimedDeactivation()
     {
-        StartCoroutine(AttackRaycast());
+        yield return new WaitForSeconds(4f);
+        gameObject.SetActive(false);
+    }
 
+    public bool SeeOpponents()
+    {
+        // TODO: include FOV?
+        // Detect opponents
+        Opponents = Physics.OverlapSphere(transform.position, SightRadius, LayerMask.GetMask("Party"));
+        return Opponents.Length > 0;
+    }
+
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.DrawWireSphere(transform.position, SightRadius);
+    }
+
+    public void Attack(Player opponent)
+    {
+        StartCoroutine(AttackRaycast(opponent));
+    }
+
+    IEnumerator AttackRaycast(Player opponent)
+    {
         // Animate attack
         Anim.SetTrigger("Attack");
-    }
 
-    IEnumerator AttackRaycast()
-    {
         yield return new WaitForSeconds(.2f);
-        Debug.Log(name + " deals damage.");
+
+        opponent.Damage(AttackValue);
+        Debug.Log(name + " deals " + AttackValue + " damage to " + opponent.name + ".");
+
+        if (opponent.CurrentHealth <= 0f)
+            yield break;
 
         // Animate attack
         Anim.SetTrigger("Attack");
+
+        // Animate opponent attacked
+        opponent.Anim.SetLayerWeight(2, 1);
+        opponent.Anim.SetBool("Attacked", true);
+
+        yield return new WaitForSeconds(.6f);
+
+        // Animate opponent attacked
+        opponent.Anim.SetBool("Attacked", false);
+        opponent.Anim.SetLayerWeight(2, 0);
     }
 
 }

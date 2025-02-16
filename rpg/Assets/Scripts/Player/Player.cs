@@ -9,7 +9,7 @@ public class Player : MonoBehaviour
     [field: SerializeField] public Volume Vol { get; set; }
 
     [field: SerializeField] public float MaxHealth { get; set; } = 100f;
-    public float CurrentHealth { get; set; }
+    [field: SerializeField] public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
@@ -64,8 +64,9 @@ public class Player : MonoBehaviour
     private void Update()
     {
         StateMachine.CurrentPlayerState.FrameUpdate();
-        // allow player movement all states
-        MovePlayer();
+        // allow player movement all states if alive
+        if (CurrentHealth > 0)
+            MovePlayer();
     }
 
     private void MovePlayer()
@@ -113,11 +114,33 @@ public class Player : MonoBehaviour
     public void Damage(float damageAmount)
     {
         CurrentHealth -= damageAmount;
+        // reset combo attack (chance?)
+        BattleState.ResetCombo();
 
         if (CurrentHealth <= 0f)
         {
-            Debug.Log(name + " dies.");
+            CurrentHealth = 0f;
+            Die();
         }
+    }
+
+    private void Die()
+    {
+        Debug.Log(name + " dies.");
+
+        Movement = Vector3.zero;
+        Anim.SetFloat("Movement", Movement.magnitude);
+
+        Input.enabled = false;
+        Controller.enabled = false;
+
+        if (Anim.GetLayerWeight(1) == 1)
+            Anim.SetLayerWeight(1, 0);
+
+        // Animate death
+        Anim.SetTrigger("Die");
+
+        // game over screen/respawn
     }
 
 }

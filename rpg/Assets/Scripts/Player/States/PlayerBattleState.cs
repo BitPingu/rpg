@@ -119,7 +119,8 @@ public class PlayerBattleState : PlayerState
 
         if (_clickTime >= 1.7f && _clickTime < 2.1f) {
             // spin boost
-            _controller.Move(player.Movement * Time.deltaTime);
+            if (player.CurrentHealth > 0f)
+                _controller.Move(player.Movement * Time.deltaTime);
         }
 
         // Animate attack
@@ -127,6 +128,11 @@ public class PlayerBattleState : PlayerState
 
         // Animate attack speed
         player.Anim.SetFloat("Attack Speed", player.AttackSpeed);
+    }
+
+    public void ResetCombo()
+    {
+        _clickTime = -.5f;
     }
 
     private void Ability()

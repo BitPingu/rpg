@@ -53,7 +53,7 @@ public class EnemyIdleState : EnemyState
         Idle();
 
         // chase player
-        if (enemy.CheckPlayerWithinRange(enemy.SightRadius))
+        if (enemy.SeeOpponents())
             enemy.StateMachine.ChangeState(enemy.BattleState);
     }
 

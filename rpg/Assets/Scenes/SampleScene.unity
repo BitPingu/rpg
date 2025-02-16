@@ -975,6 +975,10 @@ PrefabInstance:
       value: Player
       objectReference: {fileID: 0}
     - target: {fileID: 8189980434977739222, guid: 724781987b752449baf83b94d7082670, type: 3}
+      propertyPath: m_Layer
+      value: 7
+      objectReference: {fileID: 0}
+    - target: {fileID: 8189980434977739222, guid: 724781987b752449baf83b94d7082670, type: 3}
       propertyPath: m_TagString
       value: Player
       objectReference: {fileID: 0}
@@ -1233,6 +1237,10 @@ PrefabInstance:
     - target: {fileID: 7647134206250791342, guid: 5e47deb8628224a199b82806196c4d22, type: 3}
       propertyPath: m_Name
       value: Companion
+      objectReference: {fileID: 0}
+    - target: {fileID: 7647134206250791342, guid: 5e47deb8628224a199b82806196c4d22, type: 3}
+      propertyPath: m_Layer
+      value: 7
       objectReference: {fileID: 0}
     - target: {fileID: 7647134206250791342, guid: 5e47deb8628224a199b82806196c4d22, type: 3}
       propertyPath: m_IsActive
@@ -1564,6 +1572,7 @@ MonoBehaviour:
   <Slid>k__BackingField: {fileID: 1113370324}
   <Vol>k__BackingField: {fileID: 1302435541}
   <MaxHealth>k__BackingField: 100
+  <CurrentHealth>k__BackingField: 0
   <MaxSpeed>k__BackingField: 5
   <MaxAttackSpeed>k__BackingField: 1
   <Weapon>k__BackingField: {fileID: 1719523577}
@@ -1985,13 +1994,13 @@ CharacterController:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Height: 1
+  m_Height: 2
   m_Radius: 0.5
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
-  m_Center: {x: 0, y: 0.5, z: 0}
+  m_Center: {x: 0, y: 1, z: 0}
 --- !u!114 &1699621197
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2006,7 +2015,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   <MaxHealth>k__BackingField: 20
   <MaxSpeed>k__BackingField: 1
+  <AttackValue>k__BackingField: 10
   <MaxAttackSpeed>k__BackingField: 1
+  <AttackDelay>k__BackingField: 2
   <IdleTime>k__BackingField: 3
   <MoveTime>k__BackingField: 3
   <SightRadius>k__BackingField: 7
