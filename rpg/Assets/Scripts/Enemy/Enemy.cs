@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour
@@ -8,6 +9,8 @@ public class Enemy : MonoBehaviour
     public float MoveSpeed { get; set; }
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
     public float AttackSpeed { get; set; }
+
+    [field: SerializeField] public float AttackDelay { get; set; } = 2.0f;
 
     // [field: SerializeField] public GameObject Weapon { get; set; }
     // [field: SerializeField] public GameObject WeaponBack { get; set; }
@@ -35,8 +38,7 @@ public class Enemy : MonoBehaviour
     // state machine vars
     public EnemyStateMachine StateMachine { get; set; }
     public EnemyIdleState IdleState { get; set; }
-    public EnemyChaseState ChaseState { get; set; }
-    public EnemyAttackState AttackState { get; set; }
+    public EnemyBattleState BattleState { get; set; }
 
     private void Awake()
     {
@@ -44,8 +46,7 @@ public class Enemy : MonoBehaviour
 
         // create state instances
         IdleState = new EnemyIdleState(this, StateMachine);
-        ChaseState = new EnemyChaseState(this, StateMachine);
-        AttackState = new EnemyAttackState(this, StateMachine);
+        BattleState = new EnemyBattleState(this, StateMachine);
     }
 
     private void Start()
@@ -129,6 +130,23 @@ public class Enemy : MonoBehaviour
     private void Die()
     {
 
+    }
+
+    public void Attack()
+    {
+        StartCoroutine(AttackRaycast());
+
+        // Animate attack
+        Anim.SetTrigger("Attack");
+    }
+
+    IEnumerator AttackRaycast()
+    {
+        yield return new WaitForSeconds(.2f);
+        Debug.Log(name + " deals damage.");
+
+        // Animate attack
+        Anim.SetTrigger("Attack");
     }
 
 }

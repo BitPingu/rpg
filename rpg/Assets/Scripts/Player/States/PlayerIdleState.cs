@@ -36,7 +36,7 @@ public class PlayerIdleState : PlayerState
 
 
         // enter battle
-        if (player.Input.LeftClick)
+        if (player.Input.E)
             player.StateMachine.ChangeState(player.BattleState);
     }
 

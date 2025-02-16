@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour
     public bool RightClick { get; set; }
     public bool RightClickHold { get; set; }
 
+    public bool E { get; set; }
     public bool One { get; set; }
 
     private CinemachineOrbitalFollow _orbit;
@@ -36,7 +37,7 @@ public class PlayerController : MonoBehaviour
         VerticalInput = Input.GetAxisRaw("Vertical");
 
         // Reset cam
-        if (Input.GetKeyDown(KeyCode.E) && !_recenterCooldown && 
+        if (Input.GetKeyDown(KeyCode.Q) && !_recenterCooldown && 
             (!Input.GetMouseButton(0) || (Input.GetMouseButton(0) && !Input.GetMouseButton(1))) &&
                 !_orbit.HorizontalAxis.Recentering.Enabled && !_orbit.VerticalAxis.Recentering.Enabled)
             StartCoroutine(ResetCam());
@@ -46,6 +47,9 @@ public class PlayerController : MonoBehaviour
         LeftClickHold = Input.GetMouseButton(0);
         RightClick = Input.GetMouseButtonDown(1);
         RightClickHold = Input.GetMouseButton(1);
+
+        // Get key inputs
+        E = Input.GetKeyDown(KeyCode.E);
 
         // Get key inputs (abilities)
         One = Input.GetKeyDown(KeyCode.Alpha1);

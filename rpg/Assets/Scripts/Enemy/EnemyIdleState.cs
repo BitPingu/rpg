@@ -28,7 +28,6 @@ public class EnemyIdleState : EnemyState
         Debug.Log(enemy.name + " is idle.");
 
         // enemy.Weapon.SetActive(false);
-        // enemy.WeaponBack.SetActive(true);
 
         _idleTime = enemy.IdleTime;
         _moveTime = enemy.MoveTime;
@@ -55,7 +54,7 @@ public class EnemyIdleState : EnemyState
 
         // chase player
         if (enemy.CheckPlayerWithinRange(enemy.SightRadius))
-            enemy.StateMachine.ChangeState(enemy.ChaseState);
+            enemy.StateMachine.ChangeState(enemy.BattleState);
     }
 
     private void Idle()

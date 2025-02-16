@@ -86,6 +86,10 @@ public class PlayerBattleState : PlayerState
         // TODO: overdrive mechanic?
         // TODO: knockback/recoil? (stronger on spin attack)
 
+        // TODO: for main combo: 1-3 hits for level 1, continue holding left click to charge spin attack (hit 4) unlock on higher level
+        // TODO: animation canceling mechanic (hold left click to perform 3 hits, then lift and click again)
+        // TODO: right click hold should be for blocking enemy attack - deal less damage/increase defense, and knockback
+
         // lock rotation for aim
         if (player.Input.LeftClickHold && player.Input.RightClickHold)
             player.transform.rotation = Quaternion.Euler(0f, _cam.transform.eulerAngles.y, 0f);
@@ -97,7 +101,7 @@ public class PlayerBattleState : PlayerState
         Ability();
 
         // exit battle
-        if (!player.Input.LeftClickHold && player.Input.RightClick)
+        if (player.Input.E && _abilityState != AbilityState.active)
             player.StateMachine.ChangeState(player.IdleState);
     }
 
