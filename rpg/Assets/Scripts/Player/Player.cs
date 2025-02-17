@@ -10,12 +10,15 @@ public class Player : MonoBehaviour
     [field: SerializeField] public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
+    [field: SerializeField] public float Strength { get; set; } = 10.0f;
+    [field: SerializeField] public float Defence { get; set; } = 5.0f;
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
     public float AttackSpeed { get; set; }
 
     [field: SerializeField] public float SightRadius { get; set; } = 7.0f;
-    [field: SerializeField] public bool TargetingEnemy { get; set; }
+    [field: SerializeField] public bool TargetingOpponent { get; set; }
 
+    [field: SerializeField] private GameObject _sword;
     [field: SerializeField] public GameObject Weapon { get; set; }
     [field: SerializeField] public List<IAbility> Abilities { get; set; }
 
@@ -60,6 +63,9 @@ public class Player : MonoBehaviour
         Controller = GetComponent<CharacterController>();
         Anim = GetComponent<Animator>();
 
+        // get weapon
+        Weapon = Instantiate(_sword, transform);
+
         // start in idle state
         StateMachine.Initialize(IdleState);
     }
@@ -87,8 +93,8 @@ public class Player : MonoBehaviour
             Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
             float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
 
-            // Rotate if not targeting enemy
-            if (!TargetingEnemy)
+            // Rotate if not targeting opponent
+            if (!TargetingOpponent)
             {
                 // Smooth rotation
                 float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity, TurnSmoothTime);
@@ -135,8 +141,6 @@ public class Player : MonoBehaviour
     public void Damage(float damageAmount)
     {
         CurrentHealth -= damageAmount;
-        // reset combo attack (chance?)
-        BattleState.ResetCombo();
 
         if (CurrentHealth <= 0f)
         {
@@ -145,17 +149,37 @@ public class Player : MonoBehaviour
 
         // adjust health bar
         BattleState.HealthText.text = CurrentHealth.ToString();
-        if (!BattleState.HealthBar.gameObject.activeSelf)
+        if (!BattleState.HBar.gameObject.activeSelf)
             StartCoroutine(ShowHealthBar());
-        BattleState.HealthBar.value = CurrentHealth;
+        BattleState.HBar.SetHealth(CurrentHealth);
+
+        if (!BattleState.IsBlocking && CurrentHealth > 0)
+        {
+            // reset combo attack (chance?)
+            BattleState.ResetCombo();
+
+            // Animate attacked
+            StartCoroutine(GetHit());
+        }
     }
 
     IEnumerator ShowHealthBar()
     {
-        BattleState.HealthBar.gameObject.SetActive(true);
-        yield return new WaitForSeconds(2f);
+        BattleState.HBar.gameObject.SetActive(true);
+        yield return new WaitForSeconds(1f);
         if (StateMachine.CurrentPlayerState != BattleState)
-            BattleState.HealthBar.gameObject.SetActive(false);
+            BattleState.HBar.gameObject.SetActive(false);
+    }
+
+    IEnumerator GetHit()
+    {
+        Anim.SetLayerWeight(2, 1);
+        Anim.SetBool("Attacked", true);
+
+        yield return new WaitForSeconds(.6f);
+
+        Anim.SetBool("Attacked", false);
+        Anim.SetLayerWeight(2, 0);
     }
 
     public bool SeeOpponents()

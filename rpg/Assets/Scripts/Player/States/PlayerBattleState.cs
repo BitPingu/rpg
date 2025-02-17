@@ -8,14 +8,14 @@ public class PlayerBattleState : PlayerState
     private CharacterController _controller;
     private Enemy _currentOpponent;
 
-    private bool _stance;
-    private bool _attacking;
+    public bool IsBlocking;
+    public bool IsAttacking;
     private float _clickTime;
 
-    public TextMeshProUGUI LevelText;
+    private TextMeshProUGUI _levelText;
 
     public TextMeshProUGUI HealthText;
-    public Slider HealthBar;
+    public HealthBar HBar;
 
     private IAbility _ability;
     private float _abilityCooldownTime;
@@ -42,16 +42,17 @@ public class PlayerBattleState : PlayerState
         _controller = player.GetComponent<CharacterController>();
 
         // setup health bar
-        LevelText = GameObject.Find("Level").GetComponent<TextMeshProUGUI>();
-        LevelText.text = player.Level.ToString();
+        GameObject playerUI = GameObject.Find("Player UI");
+        HBar = playerUI.transform.Find("HealthBar").GetComponent<HealthBar>();
 
-        HealthText = GameObject.Find("Health").GetComponent<TextMeshProUGUI>();
+        HBar.SetMaxHealth(player.MaxHealth);
+        HBar.gameObject.SetActive(false);
+
+        _levelText = HBar.transform.Find("Level").GetComponent<TextMeshProUGUI>();
+        _levelText.text = player.Level.ToString();
+
+        HealthText = HBar.transform.Find("Health").GetComponent<TextMeshProUGUI>();
         HealthText.text = player.MaxHealth.ToString();
-
-        HealthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
-        HealthBar.maxValue = player.MaxHealth;
-        HealthBar.value = player.MaxHealth;
-        HealthBar.gameObject.SetActive(false);
 
         // setup abilities
         _ability = player.Abilities[0];
@@ -89,15 +90,15 @@ public class PlayerBattleState : PlayerState
         
         player.Anim.SetLayerWeight(1, 1);
 
-        _stance = false;
-        _attacking = false;
+        IsBlocking = false;
+        IsAttacking = false;
         _clickTime = 0f;
 
         // slow player
         player.MoveSpeed = player.MaxSpeed*.8f;
 
         // show ui
-        HealthBar.gameObject.SetActive(true);
+        HBar.gameObject.SetActive(true);
         _abilityIcon1.gameObject.SetActive(true);
         _abilityIcon2.gameObject.SetActive(true);
         _abilityIcon3.gameObject.SetActive(true);
@@ -108,10 +109,13 @@ public class PlayerBattleState : PlayerState
     {
         base.ExitState();
 
+        if (IsBlocking)
+            player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+
         player.Anim.SetLayerWeight(1, 0);
 
-        if (player.TargetingEnemy)
-            player.TargetingEnemy = false;
+        if (player.TargetingOpponent)
+            player.TargetingOpponent = false;
 
         AbilityVisual.weight = 0f;
 
@@ -119,7 +123,7 @@ public class PlayerBattleState : PlayerState
         player.MoveSpeed = player.MaxSpeed;
 
         // hide ui
-        HealthBar.gameObject.SetActive(false);
+        HBar.gameObject.SetActive(false);
         _abilityIcon1.gameObject.SetActive(false);
         _abilityIcon2.gameObject.SetActive(false);
         _abilityIcon3.gameObject.SetActive(false);
@@ -144,30 +148,35 @@ public class PlayerBattleState : PlayerState
 
         // allow targeting
         if (player.Input.E)
-            TargetEnemy();
+            TargetOpponent();
 
         // always face targeted opponent
-        if (player.TargetingEnemy && OpponentInRange() && player.CurrentHealth > 0)
+        if (player.TargetingOpponent && OpponentInRange())
         {
             player.FaceOpponent(_currentOpponent);
         }
-        else if (player.TargetingEnemy && !OpponentInRange() && player.CurrentHealth > 0)
+        if (player.TargetingOpponent && !OpponentInRange())
         {
             // out of range
             Debug.Log("Enemy out of range.");
-            player.TargetingEnemy = false;
+            player.TargetingOpponent = false;
+        }
+        if (player.TargetingOpponent && OpponentInRange() && _currentOpponent.CurrentHealth == 0f)
+        {
+            // enemy dies
+            player.TargetingOpponent = false;
         }
 
         // allow sword stance
-        if (!_attacking)
+        if (!IsAttacking)
             Stance();
 
         // allow main combo attack
-        if (!_stance)
+        if (!IsBlocking)
             ComboAttack();
 
         // allow abilities/arts
-        if (!_stance)
+        if (!IsBlocking)
             Ability();
 
         // exit battle
@@ -179,13 +188,13 @@ public class PlayerBattleState : PlayerState
             player.StateMachine.ChangeState(player.DeadState);
     }
 
-    private void TargetEnemy()
+    private void TargetOpponent()
     {
-        if (player.TargetingEnemy)
+        if (player.TargetingOpponent)
         {
             // exit targeting mode
             Debug.Log("Exiting targeting mode.");
-            player.TargetingEnemy = false;
+            player.TargetingOpponent = false;
             return;
         }
 
@@ -197,8 +206,14 @@ public class PlayerBattleState : PlayerState
             // Find shortest distance one
             _currentOpponent = player.Opponents[0].GetComponent<Enemy>();
 
+            if (_currentOpponent.CurrentHealth == 0f)
+            {
+                Debug.Log("No enemies nearby.");
+                return;
+            }
+
             // set opponent as target
-            player.TargetingEnemy = true;
+            player.TargetingOpponent = true;
             Debug.Log("Targeting " + _currentOpponent.name + ".");
         }
         else
@@ -218,27 +233,21 @@ public class PlayerBattleState : PlayerState
         if (player.Input.RightClickHold)
         {
             // defend with weapon
-            if (!_stance)
+            if (!IsBlocking)
             {
-                player.Weapon.transform.eulerAngles = new Vector3(
-                    player.Weapon.transform.eulerAngles.x + 60f,
-                    player.Weapon.transform.eulerAngles.y,
-                    player.Weapon.transform.eulerAngles.z
-                );
+                player.Weapon.transform.localRotation = Quaternion.Euler(60f, 0f, 0f);
+                player.Defence *= 1.5f;
             }
-            _stance = true;
+            IsBlocking = true;
         }
         else
         {
-            if (_stance)
+            if (IsBlocking)
             {
-                player.Weapon.transform.eulerAngles = new Vector3(
-                    player.Weapon.transform.eulerAngles.x - 60f,
-                    player.Weapon.transform.eulerAngles.y,
-                    player.Weapon.transform.eulerAngles.z
-                );
+                player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+                player.Defence /= 1.5f;
             }
-            _stance = false;
+            IsBlocking = false;
         }
     }
 
@@ -247,12 +256,12 @@ public class PlayerBattleState : PlayerState
         if (player.Input.LeftClickHold)
         {
             _clickTime += Time.deltaTime * player.AttackSpeed;
-            _attacking = true;
+            IsAttacking = true;
         }
         else
         {
             _clickTime = 0f;
-            _attacking = false;
+            IsAttacking = false;
         }
 
         if (_clickTime > 2.1f)
@@ -262,8 +271,7 @@ public class PlayerBattleState : PlayerState
 
         if (_clickTime >= 1.7f && _clickTime < 2.1f) {
             // spin boost
-            if (player.CurrentHealth > 0f)
-                _controller.Move(player.Movement * Time.deltaTime);
+            _controller.Move(player.Movement * Time.deltaTime);
         }
 
         // Animate attack

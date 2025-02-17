@@ -55,6 +55,10 @@ public class EnemyIdleState : EnemyState
         // chase player
         if (enemy.SeeOpponents())
             enemy.StateMachine.ChangeState(enemy.BattleState);
+
+        // enemy dies
+        if (enemy.CurrentHealth <= 0f)
+            enemy.StateMachine.ChangeState(enemy.DeadState);
     }
 
     private void Idle()

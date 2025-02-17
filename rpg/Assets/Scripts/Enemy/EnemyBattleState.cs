@@ -1,11 +1,17 @@
+using TMPro;
 using UnityEngine;
-using System.Collections.Generic;
-using System;
+using UnityEngine.UI;
 
 public class EnemyBattleState : EnemyState
 {
     private Player _currentOpponent;
     private float _attackTime;
+
+    public TextMeshProUGUI _nameText;
+    public TextMeshProUGUI _levelText;
+
+    public TextMeshProUGUI HealthText;
+    public HealthBar HBar;
 
     enum BattleState
     {
@@ -19,6 +25,23 @@ public class EnemyBattleState : EnemyState
     public EnemyBattleState(Enemy enemy, EnemyStateMachine enemyStateMachine) : base(enemy, enemyStateMachine)
     {
         // this.enemy = enemy;
+
+        // setup health bar
+        GameObject enemyUI = GameObject.Find("Enemy UI");
+        enemyUI.transform.SetParent(enemy.transform);
+        HBar = enemyUI.transform.Find("HealthBar").GetComponent<HealthBar>();
+
+        HBar.SetMaxHealth(enemy.MaxHealth);
+        HBar.gameObject.SetActive(false);
+
+        _nameText = HBar.transform.Find("Name").GetComponent<TextMeshProUGUI>();
+        _nameText.text = enemy.name.ToString();
+
+        _levelText = HBar.transform.Find("Level").GetComponent<TextMeshProUGUI>();
+        _levelText.text = enemy.Level.ToString();
+
+        HealthText = HBar.transform.Find("Health").GetComponent<TextMeshProUGUI>();
+        HealthText.text = enemy.MaxHealth.ToString();
     }
 
     // code that runs when we first enter the state
@@ -32,11 +55,13 @@ public class EnemyBattleState : EnemyState
 
         // enemy.Weapon.SetActive(true);
 
+        enemy.Anim.SetLayerWeight(1, 1);
+
         // enemy run
         enemy.MoveSpeed = enemy.MaxSpeed*1.5f;
 
-        enemy.Anim.SetLayerWeight(1, 1);
-
+        // show ui
+        HBar.gameObject.SetActive(true);
     }
 
     // code that runs when we exit the state
@@ -44,11 +69,13 @@ public class EnemyBattleState : EnemyState
     {
         base.ExitState();
 
+        enemy.Anim.SetLayerWeight(1, 0);
+
         // restore speed
         enemy.MoveSpeed = enemy.MaxSpeed;
 
-        enemy.Anim.SetLayerWeight(1, 0);
-    
+        // hide ui
+        HBar.gameObject.SetActive(false);
     }
 
     public override void FrameUpdate()
@@ -58,6 +85,7 @@ public class EnemyBattleState : EnemyState
         // Debug.Log(enemy.name + " attacking...");
 
         // TODO: add jump/dash attack for slime
+        // TODO: add aggro system for targeting different party members?
 
         // allow attacking
         Attack();
@@ -65,6 +93,10 @@ public class EnemyBattleState : EnemyState
         // exit battle
         if (!enemy.SeeOpponents() || _currentOpponent.CurrentHealth == 0)
             enemy.StateMachine.ChangeState(enemy.IdleState);
+
+        // enemy dies
+        if (enemy.CurrentHealth <= 0f)
+            enemy.StateMachine.ChangeState(enemy.DeadState);
     }
 
     private void Attack()

@@ -3,11 +3,13 @@ using UnityEngine;
 
 public class Enemy : MonoBehaviour
 {
+    [field: SerializeField] public int Level { get; set; } = 1;
     [field: SerializeField] public float MaxHealth { get; set; } = 20.0f;
-    public float CurrentHealth { get; set; }
+    [field: SerializeField] public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
-    [field: SerializeField] public float AttackValue { get; set; } = 10.0f;
+    [field: SerializeField] public float Strength { get; set; } = 10.0f;
+    [field: SerializeField] public float Defence { get; set; } = 5.0f;
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
     public float AttackSpeed { get; set; }
 
@@ -38,6 +40,7 @@ public class Enemy : MonoBehaviour
     public EnemyStateMachine StateMachine { get; set; }
     public EnemyIdleState IdleState { get; set; }
     public EnemyBattleState BattleState { get; set; }
+    public EnemyDeadState DeadState { get; set; }
 
     private void Awake()
     {
@@ -46,6 +49,7 @@ public class Enemy : MonoBehaviour
         // create state instances
         IdleState = new EnemyIdleState(this, StateMachine);
         BattleState = new EnemyBattleState(this, StateMachine);
+        DeadState = new EnemyDeadState(this, StateMachine);
     }
 
     private void Start()
@@ -128,13 +132,35 @@ public class Enemy : MonoBehaviour
         if (CurrentHealth <= 0f)
         {
             CurrentHealth = 0f;
-            Die();
         }
+
+        // adjust health bar
+        BattleState.HealthText.text = CurrentHealth.ToString();
+        BattleState.HBar.SetHealth(CurrentHealth);
+
+        // Animate attacked
+        if (CurrentHealth > 0)
+            StartCoroutine(GetHit());
     }
 
-    private void Die()
+    IEnumerator GetHit()
     {
-        Debug.Log(name + " dies.");
+        Anim.SetLayerWeight(2, 1);
+
+        if (Anim.GetBool("Attacked"))
+            Anim.SetBool("Attacked", false);
+
+        Anim.SetBool("Attacked", true);
+
+        yield return new WaitForSeconds(.6f);
+
+        Anim.SetBool("Attacked", false);
+
+        Anim.SetLayerWeight(2, 0);
+    }
+
+    public void Die()
+    {
         StartCoroutine(TimedDeactivation());
     }
 
@@ -169,24 +195,16 @@ public class Enemy : MonoBehaviour
 
         yield return new WaitForSeconds(.2f);
 
-        opponent.Damage(AttackValue);
-        Debug.Log(name + " deals " + AttackValue + " damage to " + opponent.name + ".");
+        float damage = Strength - opponent.Defence;
+        damage = Mathf.Floor(damage);
+        opponent.Damage(damage);
+        Debug.Log(name + " deals " + damage + " damage to " + opponent.name + ".");
 
         if (opponent.CurrentHealth <= 0f)
             yield break;
 
         // Animate attack
         Anim.SetTrigger("Attack");
-
-        // Animate opponent attacked
-        opponent.Anim.SetLayerWeight(2, 1);
-        opponent.Anim.SetBool("Attacked", true);
-
-        yield return new WaitForSeconds(.6f);
-
-        // Animate opponent attacked
-        opponent.Anim.SetBool("Attacked", false);
-        opponent.Anim.SetLayerWeight(2, 0);
     }
 
 }
