@@ -153,6 +153,9 @@ public class Player : MonoBehaviour
             StartCoroutine(ShowHealthBar());
         BattleState.HBar.SetHealth(CurrentHealth);
 
+        // change color
+        StartCoroutine(GetHitColor());
+
         if (!BattleState.IsBlocking && CurrentHealth > 0)
         {
             // reset combo attack (chance?)
@@ -169,6 +172,25 @@ public class Player : MonoBehaviour
         yield return new WaitForSeconds(1f);
         if (StateMachine.CurrentPlayerState != BattleState)
             BattleState.HBar.gameObject.SetActive(false);
+    }
+
+    IEnumerator GetHitColor()
+    {
+        List<Color> defaultColors = new List<Color>();
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+        {
+            defaultColors.Add(r.material.color);
+            r.material.color = new Color(1f, 0.30196078f, 0.30196078f);
+        }
+
+        yield return new WaitForSeconds(.2f);
+
+        int i=0;
+        foreach (Renderer r in GetComponentsInChildren<Renderer>())
+        {
+            r.material.color = defaultColors[i];
+            i++;
+        }
     }
 
     IEnumerator GetHit()
