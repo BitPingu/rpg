@@ -1,5 +1,6 @@
-using Unity.Cinemachine;
+using TMPro;
 using UnityEngine;
+using UnityEngine.Rendering;
 using UnityEngine.UI;
 
 public class PlayerBattleState : PlayerState
@@ -10,6 +11,11 @@ public class PlayerBattleState : PlayerState
     private bool _stance;
     private bool _attacking;
     private float _clickTime;
+
+    public TextMeshProUGUI LevelText;
+
+    public TextMeshProUGUI HealthText;
+    public Slider HealthBar;
 
     private IAbility _ability;
     private float _abilityCooldownTime;
@@ -22,7 +28,11 @@ public class PlayerBattleState : PlayerState
     }
     private AbilityState _abilityState;
 
-    private Slider _slider;
+    private Slider _abilityIcon1;
+    private Slider _abilityIcon2;
+    private Slider _abilityIcon3;
+    
+    public Volume AbilityVisual;
 
 
     // pass in any parameters you need in the constructors
@@ -30,15 +40,39 @@ public class PlayerBattleState : PlayerState
     {
         // this.player = player;
         _controller = player.GetComponent<CharacterController>();
-        
-        _ability = player.Ability1;
+
+        // setup health bar
+        LevelText = GameObject.Find("Level").GetComponent<TextMeshProUGUI>();
+        LevelText.text = player.Level.ToString();
+
+        HealthText = GameObject.Find("Health").GetComponent<TextMeshProUGUI>();
+        HealthText.text = player.MaxHealth.ToString();
+
+        HealthBar = GameObject.Find("HealthBar").GetComponent<Slider>();
+        HealthBar.maxValue = player.MaxHealth;
+        HealthBar.value = player.MaxHealth;
+        HealthBar.gameObject.SetActive(false);
+
+        // setup abilities
+        _ability = player.Abilities[0];
         _abilityState = AbilityState.ready;
 
-        _slider = player.Slid;
-        _slider.maxValue = _ability.cooldownTime;
-        _slider.value = _slider.minValue;
+        _abilityIcon1 = GameObject.Find("Dash").GetComponent<Slider>();
+        _abilityIcon1.maxValue = _ability.cooldownTime;
+        _abilityIcon1.value = _abilityIcon1.minValue;
+        _abilityIcon1.gameObject.SetActive(false);
 
-        _slider.gameObject.SetActive(false);
+        _abilityIcon2 = GameObject.Find("Buff").GetComponent<Slider>();
+        _abilityIcon2.maxValue = _ability.cooldownTime;
+        _abilityIcon2.value = _abilityIcon2.minValue;
+        _abilityIcon2.gameObject.SetActive(false);
+
+        _abilityIcon3 = GameObject.Find("Ultimate").GetComponent<Slider>();
+        _abilityIcon3.maxValue = _ability.cooldownTime;
+        _abilityIcon3.value = _abilityIcon3.minValue;
+        _abilityIcon3.gameObject.SetActive(false);
+
+        AbilityVisual = GameObject.Find("AbilityVolume").GetComponent<Volume>();
     }
 
     // code that runs when we first enter the state
@@ -48,8 +82,10 @@ public class PlayerBattleState : PlayerState
         
         Debug.Log(player.name + " is attacking.");
 
-        player.Weapon.SetActive(true);
-        player.WeaponBack.SetActive(false);
+        // hold weapon
+        player.Weapon.transform.SetParent(GameObject.Find("weapon_r").transform);
+        player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+        player.Weapon.transform.localPosition = new Vector3(0f, 0f, 0.007f);
         
         player.Anim.SetLayerWeight(1, 1);
 
@@ -61,7 +97,10 @@ public class PlayerBattleState : PlayerState
         player.MoveSpeed = player.MaxSpeed*.8f;
 
         // show ui
-        _slider.gameObject.SetActive(true);
+        HealthBar.gameObject.SetActive(true);
+        _abilityIcon1.gameObject.SetActive(true);
+        _abilityIcon2.gameObject.SetActive(true);
+        _abilityIcon3.gameObject.SetActive(true);
     }
 
     // code that runs when we exit the state
@@ -74,14 +113,16 @@ public class PlayerBattleState : PlayerState
         if (player.TargetingEnemy)
             player.TargetingEnemy = false;
 
-        if (player.WeaponBlock.activeSelf)
-            player.WeaponBlock.SetActive(false);
+        AbilityVisual.weight = 0f;
 
         // restore speed
         player.MoveSpeed = player.MaxSpeed;
 
         // hide ui
-        _slider.gameObject.SetActive(false);
+        HealthBar.gameObject.SetActive(false);
+        _abilityIcon1.gameObject.SetActive(false);
+        _abilityIcon2.gameObject.SetActive(false);
+        _abilityIcon3.gameObject.SetActive(false);
     }
 
     public override void FrameUpdate()
@@ -132,6 +173,10 @@ public class PlayerBattleState : PlayerState
         // exit battle
         if (player.Input.Q && _abilityState != AbilityState.active)
             player.StateMachine.ChangeState(player.IdleState);
+
+        // player dies
+        if (player.CurrentHealth <= 0f)
+            player.StateMachine.ChangeState(player.DeadState);
     }
 
     private void TargetEnemy()
@@ -172,14 +217,27 @@ public class PlayerBattleState : PlayerState
         // lock rotation for aim
         if (player.Input.RightClickHold)
         {
-            player.Weapon.SetActive(false);
-            player.WeaponBlock.SetActive(true);
+            // defend with weapon
+            if (!_stance)
+            {
+                player.Weapon.transform.eulerAngles = new Vector3(
+                    player.Weapon.transform.eulerAngles.x + 60f,
+                    player.Weapon.transform.eulerAngles.y,
+                    player.Weapon.transform.eulerAngles.z
+                );
+            }
             _stance = true;
         }
         else
         {
-            player.Weapon.SetActive(true);
-            player.WeaponBlock.SetActive(false);
+            if (_stance)
+            {
+                player.Weapon.transform.eulerAngles = new Vector3(
+                    player.Weapon.transform.eulerAngles.x - 60f,
+                    player.Weapon.transform.eulerAngles.y,
+                    player.Weapon.transform.eulerAngles.z
+                );
+            }
             _stance = false;
         }
     }
@@ -232,7 +290,7 @@ public class PlayerBattleState : PlayerState
                     _abilityState = AbilityState.active;
                     _abilityActiveTime = _ability.activeTime;
                     // update ui
-                    _slider.value = _slider.maxValue;
+                    _abilityIcon1.value = _abilityIcon1.maxValue;
                 }
             break;
             case AbilityState.active:
@@ -252,7 +310,7 @@ public class PlayerBattleState : PlayerState
                 {
                     _abilityCooldownTime -= Time.deltaTime;
                     // update ui
-                    _slider.value = _abilityCooldownTime;
+                    _abilityIcon1.value = _abilityCooldownTime;
                 }
                 else
                 {

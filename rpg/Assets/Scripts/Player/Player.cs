@@ -1,13 +1,11 @@
 using UnityEngine;
 using Unity.Cinemachine;
-using UnityEngine.Rendering;
-using UnityEngine.UI;
+using System.Collections.Generic;
+using System.Collections;
 
 public class Player : MonoBehaviour
 {
-    [field: SerializeField] public Slider Slid { get; set; }
-    [field: SerializeField] public Volume Vol { get; set; }
-
+    [field: SerializeField] public int Level { get; set; } = 1;
     [field: SerializeField] public float MaxHealth { get; set; } = 100f;
     [field: SerializeField] public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
@@ -19,10 +17,7 @@ public class Player : MonoBehaviour
     [field: SerializeField] public bool TargetingEnemy { get; set; }
 
     [field: SerializeField] public GameObject Weapon { get; set; }
-    [field: SerializeField] public GameObject WeaponBack { get; set; }
-    [field: SerializeField] public GameObject WeaponBlock { get; set; }
-
-    [field: SerializeField] public IAbility Ability1 { get; set; }
+    [field: SerializeField] public List<IAbility> Abilities { get; set; }
 
     public PlayerController Input { get; set; }
     private Vector3 _currentInputVector;
@@ -41,6 +36,7 @@ public class Player : MonoBehaviour
     public PlayerStateMachine StateMachine { get; set; }
     public PlayerIdleState IdleState { get; set; }
     public PlayerBattleState BattleState { get; set; }
+    public PlayerDeadState DeadState { get; set; }
 
     private void Awake()
     {
@@ -49,6 +45,7 @@ public class Player : MonoBehaviour
         // create state instances
         IdleState = new PlayerIdleState(this, StateMachine);
         BattleState = new PlayerBattleState(this, StateMachine);
+        DeadState = new PlayerDeadState(this, StateMachine);
     }
 
     private void Start()
@@ -144,27 +141,21 @@ public class Player : MonoBehaviour
         if (CurrentHealth <= 0f)
         {
             CurrentHealth = 0f;
-            Die();
         }
+
+        // adjust health bar
+        BattleState.HealthText.text = CurrentHealth.ToString();
+        if (!BattleState.HealthBar.gameObject.activeSelf)
+            StartCoroutine(ShowHealthBar());
+        BattleState.HealthBar.value = CurrentHealth;
     }
 
-    private void Die()
+    IEnumerator ShowHealthBar()
     {
-        Debug.Log(name + " dies.");
-
-        Movement = Vector3.zero;
-        Anim.SetFloat("Movement", Movement.magnitude);
-
-        Input.enabled = false;
-        Controller.enabled = false;
-
-        if (Anim.GetLayerWeight(1) == 1)
-            Anim.SetLayerWeight(1, 0);
-
-        // Animate death
-        Anim.SetTrigger("Die");
-
-        // game over screen/respawn
+        BattleState.HealthBar.gameObject.SetActive(true);
+        yield return new WaitForSeconds(2f);
+        if (StateMachine.CurrentPlayerState != BattleState)
+            BattleState.HealthBar.gameObject.SetActive(false);
     }
 
     public bool SeeOpponents()

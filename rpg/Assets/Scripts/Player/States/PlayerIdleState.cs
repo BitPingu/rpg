@@ -15,8 +15,10 @@ public class PlayerIdleState : PlayerState
 
         Debug.Log(player.name + " is idle.");
 
-        player.Weapon.SetActive(false);
-        player.WeaponBack.SetActive(true);
+        // put weapon on back
+        player.Weapon.transform.SetParent(GameObject.Find("BackpackBone").transform);
+        player.Weapon.transform.localRotation = Quaternion.Euler(-90f, 0f, 42.983f);
+        player.Weapon.transform.localPosition = new Vector3(0.456f, -0.051f, 0.241f);
     }
 
     // code that runs when we exit the state
@@ -38,6 +40,10 @@ public class PlayerIdleState : PlayerState
         // enter battle
         if (player.Input.Q)
             player.StateMachine.ChangeState(player.BattleState);
+
+        // player dies
+        if (player.CurrentHealth <= 0f)
+            player.StateMachine.ChangeState(player.DeadState);
     }
 
 }

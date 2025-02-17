@@ -14,8 +14,6 @@ public class Enemy : MonoBehaviour
     [field: SerializeField] public float AttackDelay { get; set; } = 2.0f;
 
     // [field: SerializeField] public GameObject Weapon { get; set; }
-    // [field: SerializeField] public GameObject WeaponBack { get; set; }
-
     // [field: SerializeField] public IAbility Ability1 { get; set; }
 
     [field: SerializeField] public float IdleTime { get; set; } = 3.0f;

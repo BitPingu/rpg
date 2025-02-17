@@ -11,7 +11,7 @@ public class DashAbility : IAbility
         base.Activate(parent);
 
         Player player =  parent.GetComponent<Player>();
-        player.Vol.weight = 1f;
+        player.BattleState.AbilityVisual.weight = 1f;
         player.MoveSpeed *= movementSpeedMultiplier;
         player.AttackSpeed *= attackSpeedMultiplier;
 
@@ -23,7 +23,7 @@ public class DashAbility : IAbility
         base.BeginCooldown(parent);
 
         Player player =  parent.GetComponent<Player>();
-        player.Vol.weight = 0f;
+        player.BattleState.AbilityVisual.weight = 0f;
         player.MoveSpeed = player.MaxSpeed;
         player.AttackSpeed = player.MaxAttackSpeed;
     
