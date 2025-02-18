@@ -36,6 +36,7 @@ public class PlayerDeadState : PlayerState
 
         player.Input.enabled = false;
         player.Controller.enabled = false;
+        player.Collider.enabled = false;
 
         if (player.Anim.GetLayerWeight(1) == 1)
             player.Anim.SetLayerWeight(1, 0);

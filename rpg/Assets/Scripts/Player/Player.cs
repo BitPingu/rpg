@@ -31,6 +31,7 @@ public class Player : MonoBehaviour
     public Vector3 Movement { get; set; }
 
     public CharacterController Controller { get; set; }
+    public CapsuleCollider Collider { get; set; }
     public Animator Anim { get; set; }
 
     public Collider[] Opponents { get; set; }
@@ -61,6 +62,7 @@ public class Player : MonoBehaviour
         // get player components
         Input = GetComponent<PlayerController>();
         Controller = GetComponent<CharacterController>();
+        Collider = GetComponent<CapsuleCollider>();
         Anim = GetComponent<Animator>();
 
         // get weapon

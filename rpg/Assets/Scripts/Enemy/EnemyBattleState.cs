@@ -1,10 +1,9 @@
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class EnemyBattleState : EnemyState
 {
-    private Player _currentOpponent;
+    public Player CurrentOpponent;
     private float _attackTime;
 
     public TextMeshProUGUI _nameText;
@@ -19,6 +18,17 @@ public class EnemyBattleState : EnemyState
         ability1,
     }
     private BattleState _battleState;
+
+    public LungeAbility Lunge;
+    private float _abilityCooldownTime;
+    private float _abilityActiveTime;
+    enum AbilityState
+    {
+        ready,
+        active,
+        cooldown
+    }
+    private AbilityState _abilityState;
 
 
     // pass in any parameters you need in the constructors
@@ -42,6 +52,13 @@ public class EnemyBattleState : EnemyState
 
         HealthText = HBar.transform.Find("Health").GetComponent<TextMeshProUGUI>();
         HealthText.text = enemy.MaxHealth.ToString();
+
+        // setup abilities
+        if (enemy.Abilities.Count > 0)
+        {
+            Lunge = (LungeAbility)enemy.Abilities[0];
+            _abilityState = AbilityState.ready;
+        }
     }
 
     // code that runs when we first enter the state
@@ -49,9 +66,9 @@ public class EnemyBattleState : EnemyState
     {
         base.EnterState();
 
-        _currentOpponent = enemy.Opponents[0].GetComponent<Player>();
+        CurrentOpponent = enemy.Opponents[0].GetComponent<Player>();
 
-        Debug.Log(enemy.name + " is attacking " + _currentOpponent.name + ".");
+        Debug.Log(enemy.name + " is attacking " + CurrentOpponent.name + ".");
 
         // enemy.Weapon.SetActive(true);
 
@@ -59,6 +76,9 @@ public class EnemyBattleState : EnemyState
 
         // enemy run
         enemy.MoveSpeed = enemy.MaxSpeed*1.5f;
+
+        // extend sight
+        enemy.SightRadius *= 2f;
 
         // show ui
         HBar.gameObject.SetActive(true);
@@ -74,6 +94,9 @@ public class EnemyBattleState : EnemyState
         // restore speed
         enemy.MoveSpeed = enemy.MaxSpeed;
 
+        // restore sight
+        enemy.SightRadius /= 2f;
+
         // hide ui
         HBar.gameObject.SetActive(false);
     }
@@ -84,14 +107,13 @@ public class EnemyBattleState : EnemyState
 
         // Debug.Log(enemy.name + " attacking...");
 
-        // TODO: add jump/dash attack for slime
         // TODO: add aggro system for targeting different party members?
 
         // allow attacking
         Attack();
 
         // exit battle
-        if (!enemy.SeeOpponents() || _currentOpponent.CurrentHealth == 0)
+        if (!enemy.SeeOpponents() || CurrentOpponent.CurrentHealth == 0)
             enemy.StateMachine.ChangeState(enemy.IdleState);
 
         // enemy dies
@@ -101,45 +123,85 @@ public class EnemyBattleState : EnemyState
 
     private void Attack()
     {
-        switch (_battleState)
+        if (_abilityState != AbilityState.active)
         {
-            case BattleState.main:
-                if (!OpponentInRange())
-                {
-                    // chase opponent
-                    Chase();
-                }
-                else
-                {
-                    // always face opponent
-                    enemy.FaceOpponent(_currentOpponent);
+            if (!OpponentInRange())
+            {
+                // chase opponent
+                Chase();
+            }
+            else
+            {
+                // always face opponent
+                enemy.FaceOpponent(CurrentOpponent);
 
-                    // main combo attack
-                    ComboAttack();
-                }
-            break;
-            case BattleState.ability1:
-                // abilities/arts ie. dash or jump
-            break;
+                // main combo attack
+                ComboAttack();
+            }
         }
+
+        // allow abilities/arts
+        Ability();
     }
 
-    private bool OpponentInRange()
+    public bool OpponentInRange()
     {
-        return Vector3.Distance(_currentOpponent.transform.position, enemy.transform.position) <= enemy.AttackRadius;
+        return Vector3.Distance(CurrentOpponent.transform.position, enemy.transform.position) <= enemy.AttackRadius;
     }
 
     private void Chase()
     {
-        enemy.MoveEnemy(_currentOpponent.transform.position - enemy.transform.position);
+        enemy.MoveEnemy(CurrentOpponent.transform.position - enemy.transform.position);
     }
 
     private void ComboAttack()
     {
         if (Time.time > _attackTime + enemy.AttackDelay)
         {
-            enemy.Attack(_currentOpponent);
+            enemy.Attack(CurrentOpponent);
             _attackTime = Time.time;
+        }
+    }
+
+    private void Ability()
+    {
+        // TODO: make this function inheritable for player and enemies?
+        switch (_abilityState)
+        {
+            case AbilityState.ready:
+                if (Lunge.Condition(enemy.gameObject))
+                {
+                    Lunge.Activate(enemy.gameObject);
+                    _abilityState = AbilityState.active;
+                    _abilityActiveTime = Lunge.activeTime;
+                }
+            break;
+            case AbilityState.active:
+                if (_abilityActiveTime > 0)
+                {
+                    if (Lunge.IsActive) {
+                        enemy.MoveEnemy(Lunge.TargetPos);
+                    }
+                    _abilityActiveTime -= Time.deltaTime;
+                }
+                else
+                {
+                    Lunge.BeginCooldown(enemy.gameObject);
+                    _abilityState = AbilityState.cooldown;
+                    _abilityCooldownTime = Lunge.cooldownTime;
+                }
+            break;
+            case AbilityState.cooldown:
+                if (_abilityCooldownTime > 0)
+                {
+                    _abilityCooldownTime -= Time.deltaTime;
+                }
+                else
+                {
+                    _abilityState = AbilityState.ready;
+                    Debug.Log(Lunge.name + " is ready.");
+                }
+            break;
         }
     }
 

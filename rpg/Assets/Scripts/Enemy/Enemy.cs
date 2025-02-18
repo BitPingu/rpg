@@ -17,7 +17,7 @@ public class Enemy : MonoBehaviour
     [field: SerializeField] public float AttackDelay { get; set; } = 2.0f;
 
     // [field: SerializeField] public GameObject Weapon { get; set; }
-    // [field: SerializeField] public IAbility Ability1 { get; set; }
+    [field: SerializeField] public List<IAbility> Abilities { get; set; }
 
     [field: SerializeField] public float IdleTime { get; set; } = 3.0f;
     [field: SerializeField] public float MoveTime { get; set; } = 3.0f;
@@ -33,6 +33,7 @@ public class Enemy : MonoBehaviour
     public Vector3 Movement { get; set; }
 
     public CharacterController Controller { get; set; }
+    public Rigidbody RB { get; set; }
     public Animator Anim { get; set; }
 
     public Collider[] Opponents { get; set; }
@@ -62,6 +63,7 @@ public class Enemy : MonoBehaviour
 
         // get enemy components
         Controller = GetComponent<CharacterController>();
+        RB = GetComponent<Rigidbody>();
         Anim = GetComponent<Animator>();
 
         // start in idle state
@@ -75,6 +77,11 @@ public class Enemy : MonoBehaviour
         Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
+    private void FixedUpdate()
+    {
+        StateMachine.CurrentEnemyState.PhysicsUpdate();
+    }
+
     public void MoveEnemy(Vector3 inputVector)
     {
         // Get direction from input
@@ -85,7 +92,7 @@ public class Enemy : MonoBehaviour
         // Check if moving in any direction
         if (inputVector.magnitude >= 0.1f)
         {
-            // Calculate angle with cam
+            // Calculate angle
             float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg;
 
             // Smooth rotation
@@ -140,7 +147,8 @@ public class Enemy : MonoBehaviour
         BattleState.HBar.SetHealth(CurrentHealth);
 
         // change color
-        StartCoroutine(GetHitColor());
+        if (GetComponentsInChildren<Renderer>()[0].material.color != Color.blue)
+            StartCoroutine(GetHitColor());
 
         // Animate attacked
         if (CurrentHealth > 0)
@@ -153,7 +161,8 @@ public class Enemy : MonoBehaviour
         foreach (Renderer r in GetComponentsInChildren<Renderer>())
         {
             defaultColors.Add(r.material.color);
-            r.material.color = new Color(1f, 0.30196078f, 0.30196078f);
+            // r.material.color = new Color(1f, 0.30196078f, 0.30196078f);
+            r.material.color = Color.blue;
         }
 
         yield return new WaitForSeconds(.2f);
