@@ -73,6 +73,8 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         StateMachine.CurrentEnemyState.FrameUpdate();
+        // Animate movement
+        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
     public void MoveEnemy(Vector3 inputVector)
@@ -109,9 +111,6 @@ public class Enemy : MonoBehaviour
 
         // Move enemy
         Controller.Move(Movement * Time.deltaTime);
-
-        // Animate movement
-        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
     public void FaceOpponent(Player opponent)
@@ -226,7 +225,7 @@ public class Enemy : MonoBehaviour
         float damage = Strength - opponent.Defence;
         damage = Mathf.Floor(damage);
         opponent.Damage(damage);
-        Debug.Log(name + " deals " + damage + " damage to " + opponent.name + ".");
+        // Debug.Log(name + " deals " + damage + " damage to " + opponent.name + ".");
 
         if (opponent.CurrentHealth <= 0f)
             yield break;

@@ -13,7 +13,7 @@ public class CompanionIdleState : CompanionState
     {
         base.EnterState();
 
-        Debug.Log(companion.name + " is idle.");
+        // Debug.Log(companion.name + " is idle.");
 
         // put weapon on back
         companion.Weapon.transform.SetParent(companion.transform.Find("root/pelvis/spine_01/spine_02/spine_03/BackpackBone").transform);
@@ -31,11 +31,10 @@ public class CompanionIdleState : CompanionState
     {
         base.FrameUpdate();
 
-        // Debug.Log(player.name + " idling...");
+        // Debug.Log(companion.name + " idling...");
 
-        // TODO: allow interaction with world ie. chests, items, dialogue
-        // TODO: cannot do this in battle state
-
+        // follow player
+        companion.FollowPlayer();
 
         // enter battle
         if (companion.Player.Input.Q)

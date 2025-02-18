@@ -1,5 +1,4 @@
 using UnityEngine;
-using Unity.Cinemachine;
 using System.Collections.Generic;
 using System.Collections;
 
@@ -10,6 +9,7 @@ public class Companion : MonoBehaviour
     [field: SerializeField] public float CurrentHealth { get; set; }
     [field: SerializeField] public float MaxSpeed { get; set; } = 3.0f;
     public float MoveSpeed { get; set; }
+    [field: SerializeField] public float DistanceFromPlayer { get; set; } = 2f;
     [field: SerializeField] public float Strength { get; set; } = 10.0f;
     [field: SerializeField] public float Defence { get; set; } = 5.0f;
     [field: SerializeField] public float MaxAttackSpeed { get; set; } = 1.0f;
@@ -76,9 +76,11 @@ public class Companion : MonoBehaviour
     private void Update()
     {
         StateMachine.CurrentCompanionState.FrameUpdate();
+        // Animate movement
+        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
-    private void MoveCompanion(Vector3 inputVector)
+    public void MoveCompanion(Vector3 inputVector)
     {
         // Get direction from input
         inputVector = inputVector.normalized;
@@ -88,9 +90,8 @@ public class Companion : MonoBehaviour
         // Check if moving in any direction
         if (inputVector.magnitude >= 0.1f)
         {
-            // Calculate angle with cam
-            Transform cam = GetComponentInChildren<CinemachineCamera>().transform;
-            float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg + cam.eulerAngles.y;
+            // Calculate angle
+            float targetAngle = Mathf.Atan2(inputVector.x, inputVector.z) * Mathf.Rad2Deg;
 
             // Rotate if not targeting opponent
             if (!TargetingOpponent)
@@ -117,9 +118,17 @@ public class Companion : MonoBehaviour
 
         // Move companion
         Controller.Move(Movement * Time.deltaTime);
+    }
 
-        // Animate movement
-        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
+    public void FollowPlayer()
+    {
+        // Get distance from player
+        float distance = Vector3.Distance(Player.transform.position, transform.position);
+
+        if (distance > DistanceFromPlayer)
+            MoveCompanion(Player.transform.position - transform.position);
+        else
+            Movement = Vector3.zero;
     }
 
     public void FaceOpponent(Enemy opponent)

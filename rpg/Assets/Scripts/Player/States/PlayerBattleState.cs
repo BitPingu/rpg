@@ -237,6 +237,9 @@ public class PlayerBattleState : PlayerState
         // lock rotation for aim
         if (player.Input.RightClickHold)
         {
+            // slow player
+            player.MoveSpeed = player.MaxSpeed*.5f;
+
             if (!IsBlockingCheck)
             {
                 IsBlockingCheck = true;
@@ -274,6 +277,9 @@ public class PlayerBattleState : PlayerState
         }
         else
         {
+            // restore speed
+            player.MoveSpeed = player.MaxSpeed*.8f;
+
             if (IsBlockingCheck)
             {
                 IsBlockingCheck = false;

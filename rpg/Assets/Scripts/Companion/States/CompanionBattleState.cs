@@ -80,7 +80,7 @@ public class CompanionBattleState : CompanionState
     {
         base.EnterState();
         
-        Debug.Log(companion.name + " is attacking.");
+        // Debug.Log(companion.name + " is attacking.");
 
         // hold weapon
         companion.Weapon.transform.SetParent(companion.transform.Find("root/pelvis/spine_01/spine_02/spine_03/clavicle_r/upperarm_r/lowerarm_r/hand_r/weapon_r").transform);
@@ -108,7 +108,11 @@ public class CompanionBattleState : CompanionState
         companion.Anim.SetLayerWeight(1, 0);
 
         if (companion.TargetingOpponent)
+        {
             companion.TargetingOpponent = false;
+            // unfree
+            companion.DistanceFromPlayer /= 3f;
+        }
 
         // AbilityVisual.weight = 0f;
 
@@ -122,6 +126,9 @@ public class CompanionBattleState : CompanionState
 
         // Debug.Log(companion.name + " attacking...");
 
+        // follow player
+        companion.FollowPlayer();
+
         // allow targeting
         TargetOpponent();
 
@@ -134,11 +141,15 @@ public class CompanionBattleState : CompanionState
         {
             // out of range
             companion.TargetingOpponent = false;
+            // unfree
+            companion.DistanceFromPlayer /= 3f;
         }
         if (companion.TargetingOpponent && OpponentInRange() && _currentOpponent.CurrentHealth == 0f)
         {
             // enemy dies
             companion.TargetingOpponent = false;
+            // unfree
+            companion.DistanceFromPlayer /= 3f;
         }
 
         // allow staff stance
@@ -185,6 +196,9 @@ public class CompanionBattleState : CompanionState
             // set opponent as target
             companion.TargetingOpponent = true;
             // Debug.Log(companion.name + " is targeting " + _currentOpponent.name + ".");
+
+            // free
+            companion.DistanceFromPlayer *= 3f;
         }
         // else
         // {

@@ -22,7 +22,7 @@ public class Weapon : MonoBehaviour
                 float damage = _player.Strength + Power - opponent.Defence;
                 damage = Mathf.Floor(damage);
                 opponent.Damage(damage);
-                Debug.Log("hit " + opponent.name + " for " + damage + " damage.");
+                // Debug.Log("hit " + opponent.name + " for " + damage + " damage.");
             }
         }
     }

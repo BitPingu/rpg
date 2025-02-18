@@ -2139,7 +2139,8 @@ MonoBehaviour:
   <Level>k__BackingField: 1
   <MaxHealth>k__BackingField: 100
   <CurrentHealth>k__BackingField: 0
-  <MaxSpeed>k__BackingField: 3
+  <MaxSpeed>k__BackingField: 5
+  <DistanceFromPlayer>k__BackingField: 2.5
   <Strength>k__BackingField: 10
   <Defence>k__BackingField: 5
   <MaxAttackSpeed>k__BackingField: 1
