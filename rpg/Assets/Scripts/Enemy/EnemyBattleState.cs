@@ -68,7 +68,7 @@ public class EnemyBattleState : EnemyState
 
         CurrentOpponent = enemy.Opponents[0].GetComponent<Player>();
 
-        Debug.Log(enemy.name + " is attacking " + CurrentOpponent.name + ".");
+        // Debug.Log(enemy.name + " is attacking " + CurrentOpponent.name + ".");
 
         // enemy.Weapon.SetActive(true);
 
@@ -199,7 +199,7 @@ public class EnemyBattleState : EnemyState
                 else
                 {
                     _abilityState = AbilityState.ready;
-                    Debug.Log(Lunge.name + " is ready.");
+                    // Debug.Log(Lunge.name + " is ready.");
                 }
             break;
         }

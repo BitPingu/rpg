@@ -17,7 +17,7 @@ public class LungeAbility : IAbility
         TargetPos = slime.BattleState.CurrentOpponent.transform.position - slime.transform.position;
         slime.LungeAttack();
 
-        Debug.Log(name + " activated.");
+        // Debug.Log(name + " activated.");
     }
 
     public override void BeginCooldown(GameObject parent)
@@ -28,7 +28,7 @@ public class LungeAbility : IAbility
         slime.MoveSpeed = slime.MaxSpeed;
     
         // ability finished
-        Debug.Log(name + " on cooldown.");
+        // Debug.Log(name + " on cooldown.");
     }
 
     public bool Condition(GameObject parent)

@@ -13,10 +13,10 @@ public class PlayerIdleState : PlayerState
     {
         base.EnterState();
 
-        Debug.Log(player.name + " is idle.");
+        // Debug.Log(player.name + " is idle.");
 
         // put weapon on back
-        player.Weapon.transform.SetParent(GameObject.Find("BackpackBone").transform);
+        player.Weapon.transform.SetParent(player.transform.Find("root/pelvis/spine_01/spine_02/spine_03/BackpackBone").transform);
         player.Weapon.transform.localRotation = Quaternion.Euler(-90f, 0f, 42.983f);
         player.Weapon.transform.localPosition = new Vector3(0.456f, -0.051f, 0.241f);
     }

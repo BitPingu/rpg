@@ -39,7 +39,7 @@ public class Slime : Enemy
                 float damage = Strength + BattleState.Lunge.Power - opponent.Defence;
                 damage = Mathf.Floor(damage);
                 opponent.Damage(damage);
-                Debug.Log(BattleState.Lunge.name + "hit " + opponent.name + " for " + damage + " damage.");
+                // Debug.Log(BattleState.Lunge.name + " hit " + opponent.name + " for " + damage + " damage.");
             }
         }
     }

@@ -3,7 +3,7 @@ using Unity.Cinemachine;
 using System.Collections.Generic;
 using System.Collections;
 
-public class Player : MonoBehaviour
+public class Companion : MonoBehaviour
 {
     [field: SerializeField] public int Level { get; set; } = 1;
     [field: SerializeField] public float MaxHealth { get; set; } = 100f;
@@ -18,11 +18,10 @@ public class Player : MonoBehaviour
     [field: SerializeField] public float SightRadius { get; set; } = 7.0f;
     public bool TargetingOpponent { get; set; }
 
-    [field: SerializeField] private GameObject _sword;
+    [field: SerializeField] private GameObject _staff;
     [field: SerializeField] public GameObject Weapon { get; set; }
     [field: SerializeField] public List<IAbility> Abilities { get; set; }
 
-    public PlayerController Input { get; set; }
     private Vector3 _currentInputVector;
     public float SmoothInputSpeed { get; set; } = 0.1f;
     private Vector3 _smoothInputVelocity;
@@ -34,39 +33,41 @@ public class Player : MonoBehaviour
     public CapsuleCollider Collider { get; set; }
     public Animator Anim { get; set; }
 
+    public Player Player { get; set; }
     public Collider[] Opponents { get; set; }
 
     // state machine vars
-    public PlayerStateMachine StateMachine { get; set; }
-    public PlayerIdleState IdleState { get; set; }
-    public PlayerBattleState BattleState { get; set; }
-    public PlayerDeadState DeadState { get; set; }
+    public CompanionStateMachine StateMachine { get; set; }
+    public CompanionIdleState IdleState { get; set; }
+    public CompanionBattleState BattleState { get; set; }
+    public CompanionDeadState DeadState { get; set; }
 
     private void Awake()
     {
-        StateMachine = new PlayerStateMachine();
+        StateMachine = new CompanionStateMachine();
 
         // create state instances
-        IdleState = new PlayerIdleState(this, StateMachine);
-        BattleState = new PlayerBattleState(this, StateMachine);
-        DeadState = new PlayerDeadState(this, StateMachine);
+        IdleState = new CompanionIdleState(this, StateMachine);
+        BattleState = new CompanionBattleState(this, StateMachine);
+        DeadState = new CompanionDeadState(this, StateMachine);
     }
 
     private void Start()
     {
-        // set player parameters
+        // set companion parameters
         CurrentHealth = MaxHealth;
         MoveSpeed = MaxSpeed;
         AttackSpeed = MaxAttackSpeed;
 
-        // get player components
-        Input = GetComponent<PlayerController>();
+        // get companion components
         Controller = GetComponent<CharacterController>();
         Collider = GetComponent<CapsuleCollider>();
         Anim = GetComponent<Animator>();
 
+        Player = GameObject.Find("Player").GetComponent<Player>();
+
         // get weapon
-        Weapon = Instantiate(_sword, transform);
+        Weapon = Instantiate(_staff, transform);
 
         // start in idle state
         StateMachine.Initialize(IdleState);
@@ -74,17 +75,13 @@ public class Player : MonoBehaviour
 
     private void Update()
     {
-        StateMachine.CurrentPlayerState.FrameUpdate();
-        // allow player movement all states if alive
-        if (CurrentHealth > 0)
-            MovePlayer();
+        StateMachine.CurrentCompanionState.FrameUpdate();
     }
 
-    private void MovePlayer()
+    private void MoveCompanion(Vector3 inputVector)
     {
-        // TODO: make this function inheritable for player and enemies?
         // Get direction from input
-        Vector3 inputVector = new Vector3(Input.HorizontalInput, 0f, Input.VerticalInput).normalized;
+        inputVector = inputVector.normalized;
 
         Vector3 MoveDir = Vector3.zero;
 
@@ -118,7 +115,7 @@ public class Player : MonoBehaviour
         // Speed multiplier
         Movement *= MoveSpeed;
 
-        // Move player
+        // Move companion
         Controller.Move(Movement * Time.deltaTime);
 
         // Animate movement
@@ -172,7 +169,7 @@ public class Player : MonoBehaviour
     {
         BattleState.HBar.gameObject.SetActive(true);
         yield return new WaitForSeconds(1f);
-        if (StateMachine.CurrentPlayerState != BattleState)
+        if (StateMachine.CurrentCompanionState != BattleState)
             BattleState.HBar.gameObject.SetActive(false);
     }
 

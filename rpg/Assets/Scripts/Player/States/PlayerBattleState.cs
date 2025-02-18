@@ -8,6 +8,7 @@ public class PlayerBattleState : PlayerState
     private CharacterController _controller;
     private Enemy _currentOpponent;
 
+    public bool IsBlockingCheck;
     public bool IsBlocking;
     public bool IsAttacking;
     private float _clickTime;
@@ -81,15 +82,16 @@ public class PlayerBattleState : PlayerState
     {
         base.EnterState();
         
-        Debug.Log(player.name + " is attacking.");
+        // Debug.Log(player.name + " is attacking.");
 
         // hold weapon
-        player.Weapon.transform.SetParent(GameObject.Find("weapon_r").transform);
+        player.Weapon.transform.SetParent(player.transform.Find("root/pelvis/spine_01/spine_02/spine_03/clavicle_r/upperarm_r/lowerarm_r/hand_r/weapon_r").transform);
         player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
         player.Weapon.transform.localPosition = new Vector3(0f, 0f, 0.007f);
         
         player.Anim.SetLayerWeight(1, 1);
 
+        IsBlockingCheck = false;
         IsBlocking = false;
         IsAttacking = false;
         _clickTime = 0f;
@@ -109,8 +111,11 @@ public class PlayerBattleState : PlayerState
     {
         base.ExitState();
 
-        if (IsBlocking)
+        if (IsBlockingCheck)
             player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+        
+        if (IsBlocking)
+            player.Defence /= 1.5f;
 
         player.Anim.SetLayerWeight(1, 0);
 
@@ -158,7 +163,7 @@ public class PlayerBattleState : PlayerState
         if (player.TargetingOpponent && !OpponentInRange())
         {
             // out of range
-            Debug.Log("Enemy out of range.");
+            // Debug.Log("Enemy out of range.");
             player.TargetingOpponent = false;
         }
         if (player.TargetingOpponent && OpponentInRange() && _currentOpponent.CurrentHealth == 0f)
@@ -169,14 +174,14 @@ public class PlayerBattleState : PlayerState
 
         // allow sword stance
         if (!IsAttacking)
-            Stance();
+            Block();
 
         // allow main combo attack
-        if (!IsBlocking)
+        if (!IsBlockingCheck)
             ComboAttack();
 
         // allow abilities/arts
-        if (!IsBlocking)
+        if (!IsBlockingCheck)
             Ability();
 
         // exit battle
@@ -214,7 +219,7 @@ public class PlayerBattleState : PlayerState
 
             // set opponent as target
             player.TargetingOpponent = true;
-            Debug.Log("Targeting " + _currentOpponent.name + ".");
+            // Debug.Log(player.name + " is targeting " + _currentOpponent.name + ".");
         }
         else
         {
@@ -227,27 +232,59 @@ public class PlayerBattleState : PlayerState
         return Vector3.Distance(_currentOpponent.transform.position, player.transform.position) <= player.SightRadius;
     }
 
-    private void Stance()
+    private void Block()
     {
         // lock rotation for aim
         if (player.Input.RightClickHold)
         {
-            // defend with weapon
-            if (!IsBlocking)
+            if (!IsBlockingCheck)
             {
+                IsBlockingCheck = true;
+                // sword stance
                 player.Weapon.transform.localRotation = Quaternion.Euler(60f, 0f, 0f);
-                player.Defence *= 1.5f;
             }
-            IsBlocking = true;
+
+            // Get direction towards opponent
+            if (!player.SeeOpponents())
+                return;
+            _currentOpponent = player.Opponents[0].GetComponent<Enemy>();
+            Vector3 relative = player.transform.InverseTransformPoint(_currentOpponent.transform.position);
+
+            // Calculate angle
+            float angle = Mathf.Atan2(relative.x, relative.z) * Mathf.Rad2Deg;
+
+            // Opponent in FOV
+            if (angle >= -(60/2) && angle <= (60/2))
+            {
+                // defend with weapon
+                if (!IsBlocking)
+                {
+                    player.Defence *= 1.5f;
+                }
+                IsBlocking = true;
+            }
+            else
+            {
+                if (IsBlocking)
+                {
+                    player.Defence /= 1.5f;
+                }
+                IsBlocking = false;
+            }
         }
         else
         {
-            if (IsBlocking)
+            if (IsBlockingCheck)
             {
+                IsBlockingCheck = false;
+                // lower stance
                 player.Weapon.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
-                player.Defence /= 1.5f;
+                if (IsBlocking)
+                {
+                    IsBlocking = false;
+                    player.Defence /= 1.5f;
+                }
             }
-            IsBlocking = false;
         }
     }
 

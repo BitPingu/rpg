@@ -25,7 +25,7 @@ public class EnemyIdleState : EnemyState
     {
         base.EnterState();
 
-        Debug.Log(enemy.name + " is idle.");
+        // Debug.Log(enemy.name + " is idle.");
 
         // enemy.Weapon.SetActive(false);
 

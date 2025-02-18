@@ -73,13 +73,6 @@ public class Enemy : MonoBehaviour
     private void Update()
     {
         StateMachine.CurrentEnemyState.FrameUpdate();
-        // Animate movement
-        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
-    }
-
-    private void FixedUpdate()
-    {
-        StateMachine.CurrentEnemyState.PhysicsUpdate();
     }
 
     public void MoveEnemy(Vector3 inputVector)
@@ -116,6 +109,9 @@ public class Enemy : MonoBehaviour
 
         // Move enemy
         Controller.Move(Movement * Time.deltaTime);
+
+        // Animate movement
+        Anim.SetFloat("Movement", Movement.magnitude/MoveSpeed);
     }
 
     public void FaceOpponent(Player opponent)
